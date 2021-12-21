@@ -63,7 +63,7 @@ drop function preis;
 
 drop table stornierteBuchungen;
 
-drop trigger stornoSpeicherung;
+--drop trigger stornoSpeicherung;
 
 commit;
 
