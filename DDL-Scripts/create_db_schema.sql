@@ -101,13 +101,13 @@ CREATE TABLE belegungen(
 
 COMMENT ON COLUMN belegungen.statusflag IS 'Umwandlung von Reservierung zu Buchung ist moeglich, andersherum nicht.';
 
-
+-- on delete cascade muss raus, da ansonsten der Trigger nicht funktioniert -> Abbildung über Trigger
 CREATE TABLE rechnungen(
     rechnungsnummer INT CONSTRAINT pk_rechnungen PRIMARY KEY,
     betrag NUMBER(12,2) NOT NULL CONSTRAINT check_rechnungen_betrag CHECK(betrag >= 0),
     rechnungsdatum DATE NOT NULL,
     zahlungsdatum DATE,
-    belegungsnummer INT NOT NULL CONSTRAINT ak_rechnungen UNIQUE CONSTRAINT fk_rechnungen_belegungen REFERENCES belegungen(belegungsnummer) ON DELETE CASCADE,
+    belegungsnummer INT NOT NULL CONSTRAINT ak_rechnungen UNIQUE CONSTRAINT fk_rechnungen_belegungen REFERENCES belegungen(belegungsnummer) DEFERRABLE INITIALLY DEFERRED, --on delete cascade,
     CONSTRAINT check_rechnungen_zahlungsdatum_rechnungsdatum CHECK(zahlungsdatum >= rechnungsdatum));
 
 
@@ -217,6 +217,8 @@ create or replace function preis(Tage int, FeWoNr int)
     end;
     /
 
+-- select preis(10, 1) from dual;
+
 
 CREATE TABLE stornierteBuchungen(
     Stornonummer int primary key,
@@ -231,7 +233,52 @@ CREATE TABLE stornierteBuchungen(
     Vorname varchar2(256) not null,
     Nachname varchar2(256) not null,
     Wohnungsid int not null,
-    WohnBeschreibung varchar(256) not null);
+    WohnBeschreibung varchar(256) not null,
+    constraint check_stornierteBuchungen_Datum check(Buchungsanfang < Buchungsende));
+    
+create or replace trigger stornoSpeicherung
+before delete on belegungen
+for each row
+when (old.statusflag = 'Buchung')
+    declare
+        zahlungsstatus varchar2(256);
+        vorname varchar2(256);
+        nachname varchar2(256);
+        wohnbeschreibung varchar2(256);
+        tage int;
+        gibtRechnung boolean;
+    begin
+        tage := :old.abreisetermin - :old.anreisetermin;
+        
+        -- Implementierung für gibtRechnung boolean
+        
+        -- gibtRechnung verwenden für Zahlungsstatus
+        select case when rech.zahlungsdatum is null then 'offen' else 'bezahlt' end into zahlungsstatus
+            from    rechnungen rech
+            where   :old.belegungsnummer = rech.belegungsnummer;
+
+        select kun.vorname, kun.nachname into vorname, nachname
+            from    kunden kun
+            where   :old.belegtvon = kun.kundennummer;
+
+        /*select kun.nachname into nachname
+            from    kunden kun
+            where   :old.belegtvon = kun.kundennummer;*/
+
+        select  fewo.beschreibung into wohnbeschreibung
+            from    ferienwohnungen fewo
+            where   :old.wohnungsid = fewo.wohnungsid;
+
+        insert into stornierteBuchungen
+            values  (geloeschteBuchungen.nextval, current_date, :old.belegungsnummer,
+                    :old.buchungsdatum, :old.anreisetermin, :old.abreisetermin,
+                    preis(tage, :old.wohnungsid),
+                    zahlungsstatus, :old.belegtvon, vorname, nachname, :old.wohnungsid,
+                    wohnbeschreibung);
+        
+        -- on delete cascascade bei Rechnungen nachbilden unter Verwendung von gibtRechnung
+    end;
+    /
 
     
     

@@ -10,30 +10,25 @@ when (old.statusflag = 'Buchung')
         nachname varchar2(256);
         wohnbeschreibung varchar2(256);
         tage int;
-        
     begin
         tage := :old.abreisetermin - :old.anreisetermin;
-    
+
         select case when rech.zahlungsdatum is null then 'offen' else 'bezahlt' end into zahlungsstatus
-            from    belegungen bel, rechnungen rech
-            where   bel.belegungsnummer = rech.belegungsnummer and
-                    bel.belegungsnummer = :old.belegungsnummer;
-        
-        select kun.vorname into vorname
-            from    belegungen bel, kunden kun
-            where   bel.belegtvon = kun.kundennummer and
-                    bel.belegungsnummer = :old.belegungsnummer;
-        
-        select kun.nachname into nachname
-            from    belegungen bel, kunden kun
-            where   bel.belegtvon = kun.kundennummer and
-                    bel.belegungsnummer = :old.belegungsnummer;
-        
+            from    rechnungen rech
+            where   :old.belegungsnummer = rech.belegungsnummer;
+
+        select kun.vorname, kun.nachname into vorname, nachname
+            from    kunden kun
+            where   :old.belegtvon = kun.kundennummer;
+
+        /*select kun.nachname into nachname
+            from    kunden kun
+            where   :old.belegtvon = kun.kundennummer;*/
+
         select  fewo.beschreibung into wohnbeschreibung
-            from    belegungen bel, ferienwohnungen fewo
-            where   bel.wohnungsid = fewo.wohnungsid and
-                    bel.belegungsnummer = :old.belegungsnummer;
-        
+            from    ferienwohnungen fewo
+            where   :old.wohnungsid = fewo.wohnungsid;
+
         insert into stornierteBuchungen
             values  (geloeschteBuchungen.nextval, current_date, :old.belegungsnummer,
                     :old.buchungsdatum, :old.anreisetermin, :old.abreisetermin,

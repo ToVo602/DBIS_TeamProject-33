@@ -10,5 +10,6 @@ delete from touristenattraktionen where name = 'Hoernle';
 
 delete from belegungen where belegungsnummer = 6;
 
+
 rollback;
 
