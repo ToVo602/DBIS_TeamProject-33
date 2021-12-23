@@ -286,20 +286,8 @@ when (old.statusflag = 'Buchung')
                     zahlungsstatus, :old.belegtvon, vorname, nachname, :old.wohnungsid,
                     wohnbeschreibung);
 
-        -- on delete cascascade bei Rechnungen nachbilden
+        -- on delete cascascade bei Rechnungen nachbilden!
         delete from rechnungen rech where rech.belegungsnummer = :old.belegungsnummer;
 
     end;
     /
-
-    
-    
-
-
-
-
-
-
-
-
-
