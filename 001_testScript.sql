@@ -8,7 +8,7 @@ delete from fluggesellschaften where iatacode = 'LH';
 
 delete from touristenattraktionen where name = 'Hoernle';
 
-delete from belegungen where belegungsnummer = 6;
+delete from belegungen where belegungsnummer in (1, 4, 6);
 
 
 rollback;

@@ -107,7 +107,7 @@ CREATE TABLE rechnungen(
     betrag NUMBER(12,2) NOT NULL CONSTRAINT check_rechnungen_betrag CHECK(betrag >= 0),
     rechnungsdatum DATE NOT NULL,
     zahlungsdatum DATE,
-    belegungsnummer INT NOT NULL CONSTRAINT ak_rechnungen UNIQUE CONSTRAINT fk_rechnungen_belegungen REFERENCES belegungen(belegungsnummer) DEFERRABLE INITIALLY DEFERRED, --on delete cascade,
+    belegungsnummer INT NOT NULL CONSTRAINT ak_rechnungen UNIQUE CONSTRAINT fk_rechnungen_belegungen REFERENCES belegungen(belegungsnummer), --DEFERRABLE INITIALLY DEFERRED, --on delete cascade,
     CONSTRAINT check_rechnungen_zahlungsdatum_rechnungsdatum CHECK(zahlungsdatum >= rechnungsdatum));
 
 
@@ -246,16 +246,26 @@ when (old.statusflag = 'Buchung')
         nachname varchar2(256);
         wohnbeschreibung varchar2(256);
         tage int;
-        gibtRechnung boolean;
+        anzahlRechnungen int;
+        zahldatum date;
     begin
         tage := :old.abreisetermin - :old.anreisetermin;
+
+        select count(*) into anzahlRechnungen
+            from rechnungen rech
+            where rech.belegungsnummer = :old.belegungsnummer;
         
-        -- Implementierung für gibtRechnung boolean
-        
-        -- gibtRechnung verwenden für Zahlungsstatus
-        select case when rech.zahlungsdatum is null then 'offen' else 'bezahlt' end into zahlungsstatus
-            from    rechnungen rech
-            where   :old.belegungsnummer = rech.belegungsnummer;
+        if anzahlRechnungen > 0
+        then select rech.zahlungsdatum into zahldatum
+                from rechnungen rech
+                where rech.belegungsnummer = :old.belegungsnummer;
+        else zahldatum := null;
+        end if;
+
+        if (anzahlRechnungen > 0 and zahldatum is not null)
+            then zahlungsstatus := 'bezahlt';
+            else zahlungsstatus := 'offen';
+        end if;
 
         select kun.vorname, kun.nachname into vorname, nachname
             from    kunden kun
@@ -275,8 +285,10 @@ when (old.statusflag = 'Buchung')
                     preis(tage, :old.wohnungsid),
                     zahlungsstatus, :old.belegtvon, vorname, nachname, :old.wohnungsid,
                     wohnbeschreibung);
-        
-        -- on delete cascascade bei Rechnungen nachbilden unter Verwendung von gibtRechnung
+
+        -- on delete cascascade bei Rechnungen nachbilden
+        delete from rechnungen rech where rech.belegungsnummer = :old.belegungsnummer;
+
     end;
     /
 
