@@ -12,4 +12,3 @@ delete from belegungen where belegungsnummer in (1, 4, 6);
 
 
 rollback;
-
