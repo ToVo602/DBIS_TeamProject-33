@@ -118,7 +118,7 @@ public class DBISJDBCExampleWithErrors {
         while (true) {
 
             System.out.println();
-            System.out.println("Welche Operation wollen Sie durchführen ?");
+            System.out.println("Welche Operation wollen Sie durchfï¿½hren ?");
             System.out.println("-----------------------------------------");
 
             System.out.println("1) Alle Studierende anzeigen");
@@ -259,12 +259,11 @@ public class DBISJDBCExampleWithErrors {
             int newMatrNr = DBISUtils.readIntFromStdIn("MatrNr");
             String newName = DBISUtils.readFromStdIn("Nachname");
             String newVorname = DBISUtils.readFromStdIn("Vorname");
-            String newGebDatum = DBISUtils.readDateFromStdIn("Geburtsdatum (Format DD.MM.YYYY)");
 
             System.out.println("Es gibt folgende Fachbereiche:");
             printFachbereiche();
 
-            int newFB_ID = DBISUtils.readIntFromStdIn("Geben Sie eine Fachbereichs-ID aus der Liste ein");
+            String newFB_ID = DBISUtils.readFromStdIn("Geben Sie eine Fachbereichs-ID aus der Liste ein");
 
             //Note: application logic can be improved:
             //      validate if user input is a valid "Fachbereichs-ID"
@@ -275,8 +274,8 @@ public class DBISJDBCExampleWithErrors {
 
             Statement stmt = theConnection.createStatement();
 
-            String sqlString = "INSERT INTO Student (MatrNr, FB_ID, Name, Vorname, GebDatum) " +
-                               "VALUES (" + newMatrNr + ", '" + newFB_ID + "', '" + newName + "', '" + newVorname + "', '" + newGebDatum + "')";
+            String sqlString = "INSERT INTO Student (MatrNr, Fachbereich, Name, Vorname) " +
+                               "VALUES (" + newMatrNr + ", '" + newFB_ID + "', '" + newName + "', '" + newVorname + "')";
 
             DBISUtils.printlnDebugInfo("SQL statement is:");
             DBISUtils.printlnDebugInfo(sqlString);
@@ -397,7 +396,7 @@ public class DBISJDBCExampleWithErrors {
                 System.out.println("Der Studierende mit MatrNr " + MatrNr + " wurde aktualisiert.");
             }
             else {
-                System.out.println("Der Studierende mit MatrNr " + MatrNr + " existiert nicht bzw. wurde nicht verändert.");
+                System.out.println("Der Studierende mit MatrNr " + MatrNr + " existiert nicht bzw. wurde nicht verï¿½ndert.");
             }
 
             pstmt.close();
@@ -433,7 +432,7 @@ public class DBISJDBCExampleWithErrors {
 
         try {
 
-            System.out.println("Studierende löschen");
+            System.out.println("Studierende lï¿½schen");
             System.out.println("-----------------------------------------");
 
             //flag indicates if (another) student should be deleted
@@ -444,7 +443,7 @@ public class DBISJDBCExampleWithErrors {
             //    NOTE: using a prepared statement makes sense here,
             //          since the prepared statement is potentially executed more than once!
 
-            String sqlPreparedString = "DELETE FROM Studierende WHERE MatrNr = ?";
+            String sqlPreparedString = "DELETE FROM Student WHERE MatrNr = ?";
 
             DBISUtils.printlnDebugInfo("SQL prepared statement is:");
             DBISUtils.printlnDebugInfo(sqlPreparedString);
@@ -456,7 +455,7 @@ public class DBISJDBCExampleWithErrors {
                 System.out.println("Es gibt folgende Studierende:");
                 printStudents();
 
-                int MatrNr = DBISUtils.readIntFromStdIn("Matrikelnummer des zu löschenden Studierenden");
+                int MatrNr = DBISUtils.readIntFromStdIn("Matrikelnummer des zu lï¿½schenden Studierenden");
 
                 pstmt.setInt(1, MatrNr);
                 DBISUtils.printlnDebugInfo("1. parameter set to: " + MatrNr);
@@ -471,13 +470,13 @@ public class DBISJDBCExampleWithErrors {
                 System.out.println();
 
                 if (affectedRows == 1) {
-                    System.out.println("Der Studierende mit MatrNr " + MatrNr + " wurde gelöscht.");
+                    System.out.println("Der Studierende mit MatrNr " + MatrNr + " wurde gelï¿½scht.");
                 }
                 else {
                     System.out.println("Der Studierende mit MatrNr " + MatrNr + " existierte nicht.");
                 }
 
-                flag = DBISUtils.readIntFromStdIn("Weitere Studierende löschen (1 für ja)?");
+                flag = DBISUtils.readIntFromStdIn("Weitere Studierende lï¿½schen (1 fï¿½r ja)?");
 
                 if (flag == 1) {
                     System.out.println();
@@ -524,7 +523,7 @@ public class DBISJDBCExampleWithErrors {
 
             //*** example of using a JDBC statement for SELECT ***
 
-            String sqlString = "SELECT s.MatrNr, s.Name, s.Vorname, s.GebDatum, f.FB_ID, f.FB_Name " +
+            String sqlString = "SELECT s.MatrNr, s.Name, s.Vorname, f.FB_ID, f.FB_Name " +
                                "FROM Student s, Fachbereich f " +
                                "WHERE s.Fachbereich = f.FB_ID";
 
@@ -565,7 +564,7 @@ public class DBISJDBCExampleWithErrors {
 
             String sqlPreparedString = "SELECT s.MatrNr, s.Name, s.Vorname, f.FB_ID, f.FB_Name " +
                                        "FROM Student s, Fachbereich f " +
-                                       "WHERE s.FB_ID = f.FB_ID AND MatrNr = ?";
+                                       "WHERE s.fachbereich = f.FB_ID AND MatrNr = ?";
 
             DBISUtils.printlnDebugInfo("SQL prepared statement is:");
             DBISUtils.printlnDebugInfo(sqlPreparedString);
@@ -574,8 +573,6 @@ public class DBISJDBCExampleWithErrors {
 
             pstmt.setInt(1, MatrNr);
             DBISUtils.printlnDebugInfo("1. Parameter set to: " + MatrNr);
-            pstmt.setInt(2, MatrNr);
-            DBISUtils.printlnDebugInfo("2. Parameter set to: " + MatrNr);
 
             ResultSet rs = pstmt.executeQuery();
 

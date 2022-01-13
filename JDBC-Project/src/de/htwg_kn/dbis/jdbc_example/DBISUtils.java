@@ -45,8 +45,8 @@ public class DBISUtils {
     // TODO: SET "DB_LOGIN" AND "DB_PASSWORD" TO YOUR ORACLE LOGIN AND PASSWORD!!!
 
     // User(name) and password used for connecting to the DBS instance
-    private static final String DB_LOGIN =    "theLoginName";
-    private static final String DB_PASSWORD = "thePassword";
+    private static final String DB_LOGIN =    "dbs33_b";
+    private static final String DB_PASSWORD = "dbs33_b";
 
 
     // Connection parameters to be used for connecting to the DBIS@HTWG Oracle 19c DBS instance are:
@@ -63,7 +63,7 @@ public class DBISUtils {
     // TODO: PROVIDE THE CORRECT ORACLE JDBC-URL!!!
 
     // JDBC-URL to connect to the DBIS@HTWG Oracle DBS instance
-    private static final String DB_CONNPARAMSTRING = "jdbc:oracle:thin:@XXX.in.htwg-konstanz.de:YYY:ZZZ";
+    private static final String DB_CONNPARAMSTRING = "jdbc:oracle:thin:@oracle19c.in.htwg-konstanz.de:1521:ora19c";
 
 
 
