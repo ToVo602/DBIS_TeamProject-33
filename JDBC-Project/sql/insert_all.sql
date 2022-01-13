@@ -11,7 +11,7 @@
 COMMIT;
 
 /* Set transaction isolation level to ensure serializability of transactions */
-SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+--SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 
 
 /* DML statements to insert data into table FACHBEREICH */
