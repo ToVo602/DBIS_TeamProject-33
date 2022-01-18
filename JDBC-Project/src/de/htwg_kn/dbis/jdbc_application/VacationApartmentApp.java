@@ -135,12 +135,12 @@ public class VacationApartmentApp {
 
             case 1:
                 //TODO: Method for adding a new costumer -> by modifing addStudent() to addCustomer()
-                showStudents();
+                addKunde();
                 break;
 
             case 2:
                 //TODO: Method for case-insensitiv search of a customer by String in forename or familyname  -> by modifing showStudent to showCustomers()
-                showStudent();
+                showKunde();
                 break;
 
             case 3:
@@ -148,12 +148,12 @@ public class VacationApartmentApp {
                 //Actions: Select customer -> select vacation apartment -> enter period
                 //If available, possibilities for reservation or booking or cancel
                 //if not available, enter of a different period
-                addStudent();
+                addKunde();
                 break;
 
             case 4:
                 //TODO: Method for deleting a existing reservation of booking
-                modifyStudent();
+                //modifyStudent();
                 break;
 
             case 5:
@@ -186,7 +186,7 @@ public class VacationApartmentApp {
         System.out.println("-----------------------------------------");
 
         System.out.println();
-        int rowCount = printStudents();
+        int rowCount = printOrte();
 
         try {
         	
@@ -214,15 +214,15 @@ public class VacationApartmentApp {
     /*
      * sub-menu and transaction for retrieving data of a particular student in the database
      */
-    private static void showStudent() {
+    private static void showKunde() {
 
-        System.out.println("Student/in suchen");
+        System.out.println("Kunde suchen");
         System.out.println("-----------------------------------------");
 
-        int MatrNr = DBISUtils.readIntFromStdIn("MatrikelNr des gesuchten Studierenden");
+        String vorOderNachname = DBISUtils.readFromStdIn("Vor- oder Nachname");
 
         System.out.println();
-        int rowCount = printStudent(MatrNr);
+        int rowCount = printKunde(vorOderNachname);
 
         try {
 
@@ -249,22 +249,35 @@ public class VacationApartmentApp {
     /*
      * sub-menu and transaction for adding a student to the database
      */
-    private static void addStudent() {
+    private static void addKunde() {
 
         try {
 
-            System.out.println("Student/in hinzufuegen");
+            System.out.println("Kunde hinzufuegen");
             System.out.println("-----------------------------------------");
 
-            System.out.println("Daten des Studierenden:");
-            int newMatrNr = DBISUtils.readIntFromStdIn("MatrNr");
-            String newName = DBISUtils.readFromStdIn("Nachname");
+            System.out.println("Daten des Kunden:");
+            // int newKundennummer = DBISUtils.readIntFromStdIn("Kundennummer");
+            String newNachname = DBISUtils.readFromStdIn("Nachname");
             String newVorname = DBISUtils.readFromStdIn("Vorname");
+            String newGeburtsdatum = DBISUtils.readDateFromStdIn("Geburtsdatum (dd.mm.yyyy)");
+            String newTelefonnummer = DBISUtils.readFromStdIn("Telefonnummer");
+            String newEmailAdresse = DBISUtils.readFromStdIn("E-Mail-Adresse");
+            String newIBAN = DBISUtils.readFromStdIn("IBAN");
+            String newBLZ = DBISUtils.readFromStdIn("BLZ");
+            String newKontonummer = DBISUtils.readFromStdIn("Kontonummer");
+            String newBIC = DBISUtils.readFromStdIn("BIC");
 
-            System.out.println("Es gibt folgende Fachbereiche:");
-            printFachbereiche();
 
-            String newFB_ID = DBISUtils.readFromStdIn("Geben Sie eine Fachbereichs-ID aus der Liste ein");
+            System.out.println("Es gibt folgende Orte:");
+            printOrte();
+
+            //TODO: ID wird erstmals als korrekt festgelegt, aber Check muss noch eingebaut werden.
+            String newOrtsID = DBISUtils.readFromStdIn("Geben Sie eine OrtsID aus der Liste ein");
+
+            String newPLZ = DBISUtils.readFromStdIn("PLZ");
+            String newStrasse = DBISUtils.readFromStdIn("Strasse");
+            String newHausnummer = DBISUtils.readFromStdIn("Hausnummer");
 
             //Note: application logic can be improved:
             //      validate if user input is a valid "Fachbereichs-ID"
@@ -273,15 +286,37 @@ public class VacationApartmentApp {
 
             //*** example of using a JDBC statement for for INSERT / UPDATE / DELETE ***
 
-            Statement stmt = theConnection.createStatement();
+            Statement stmtBankverbindungen = theConnection.createStatement();
 
-            String sqlString = "INSERT INTO Student (MatrNr, Fachbereich, Name, Vorname) " +
-                               "VALUES (" + newMatrNr + ", '" + newFB_ID + "', '" + newName + "', '" + newVorname + "')";
+            String sqlStringBankverbindungen = "insert into bankverbindungen (iban, blz, kontonummer, bic)\n" +
+                    "    values('" + newIBAN + "', '" + newBLZ + "', '" + newKontonummer + "', '" + newBIC + "')";
 
             DBISUtils.printlnDebugInfo("SQL statement is:");
-            DBISUtils.printlnDebugInfo(sqlString);
+            DBISUtils.printlnDebugInfo(sqlStringBankverbindungen);
 
-            int affectedRows = stmt.executeUpdate(sqlString);
+            int affectedRowsBankverbindungen = stmtBankverbindungen.executeUpdate(sqlStringBankverbindungen);
+
+            Statement stmtAdressen = theConnection.createStatement();
+
+            String sqlStringAdressen = "insert into adressen (adressid, hausnummer, strasse, plz, ortsid)\n" +
+                    "    values((select max(adressid) + 1 from adressen), '" + newHausnummer + "', '" + newStrasse + "'," +
+                    " '" + newPLZ + "', '" + newOrtsID + "')";
+
+            DBISUtils.printlnDebugInfo("SQL statement is:");
+            DBISUtils.printlnDebugInfo(sqlStringAdressen);
+
+            int affectedRowsAdressen = stmtAdressen.executeUpdate(sqlStringAdressen);
+
+            Statement stmtKunden = theConnection.createStatement();
+
+            String sqlStringKunden = "insert into kunden (kundennummer, vorname, nachname, geburtsdatum, telefonnummer, emailadresse, adressid, iban)\n" +
+                    "    values((select max(kundennummer) + 1 from kunden), '" + newVorname + "', '" + newNachname + "', '" + newGeburtsdatum + "'," +
+                    "'" + newTelefonnummer + "', '" + newEmailAdresse + "', (select max(adressid) from adressen), '" + newIBAN + "')";
+
+            DBISUtils.printlnDebugInfo("SQL statement is:");
+            DBISUtils.printlnDebugInfo(sqlStringKunden);
+
+            int affectedRowsKunden = stmtKunden.executeUpdate(sqlStringKunden);
 
             //commit the transaction
             theConnection.commit();
@@ -291,14 +326,30 @@ public class VacationApartmentApp {
 
             System.out.println();
 
-            if (affectedRows == 1) {
-                System.out.println("Der Studierende mit MatrNr " + newMatrNr + " wurde hinzugefuegt.");
+            if (affectedRowsBankverbindungen == 1) {
+                System.out.println("Die Bankverbindung " + newIBAN + " wurde hinzugefuegt.");
             }
             else {
-                System.out.println("Der Studierende mit MatrNr " + newMatrNr + " konnte nicht hinzugefuegt werden.");
+                System.out.println("Die Bankverbindung " + newIBAN + " konnte nicht hinzugefuegt werden.");
             }
 
-            stmt.close();
+            if (affectedRowsAdressen == 1) {
+                System.out.println("Die Adresse " + newStrasse + " " + newHausnummer + " wurde hinzugefuegt.");
+            }
+            else {
+                System.out.println("Die Adresse " + newStrasse + " " + newHausnummer + " konnte nicht hinzugefuegt werden.");
+            }
+
+            if (affectedRowsKunden == 1) {
+                System.out.println("Der Kunde " + newVorname + " " + newNachname + " wurde hinzugefuegt.");
+            }
+            else {
+                System.out.println("Der Kunde " + newVorname + " " + newNachname + " konnte nicht hinzugefuegt werden.");
+            }
+
+            stmtBankverbindungen.close();
+            stmtAdressen.close();
+            stmtKunden.close();
 
         } catch (SQLException se) {
 
@@ -327,6 +378,7 @@ public class VacationApartmentApp {
     /*
      * sub-menu and transaction for modifying a student in the database
      */
+    /*
     private static void modifyStudent() {
 
         try {
@@ -338,7 +390,7 @@ public class VacationApartmentApp {
 
             System.out.println("Bisherige Daten des Studierenden:");
 
-            int rowCount = printStudent(MatrNr);
+            int rowCount = printKunde(MatrNr);
 
             //Note: application logic can be improved:
             //      if no student is found (rowCount = 0), repeat user input or exit transaction on user request
@@ -423,6 +475,7 @@ public class VacationApartmentApp {
         }
 
     }
+     */
 
 
 
@@ -454,7 +507,7 @@ public class VacationApartmentApp {
             while (flag == 1) {
 
                 System.out.println("Es gibt folgende Studierende:");
-                printStudents();
+                printOrte();
 
                 int MatrNr = DBISUtils.readIntFromStdIn("Matrikelnummer des zu l�schenden Studierenden");
 
@@ -514,7 +567,7 @@ public class VacationApartmentApp {
     /*
      * retrieve and print a list of *all* students in the database
      */
-    private static int printStudents() {
+    private static int printOrte() {
 
 
         try {
@@ -524,9 +577,9 @@ public class VacationApartmentApp {
 
             //*** example of using a JDBC statement for SELECT ***
 
-            String sqlString = "SELECT s.MatrNr, s.Name, s.Vorname, f.FB_ID, f.FB_Name " +
-                               "FROM Student s, Fachbereich f " +
-                               "WHERE s.Fachbereich = f.FB_ID";
+            String sqlString = "select o.ortsid, o.name, l.name\n" +
+                    "    from orte o, laender l\n" +
+                    "    where o.isocode = l.isocode";
 
             DBISUtils.printlnDebugInfo("SQL statement is:");
             DBISUtils.printlnDebugInfo(sqlString);
@@ -555,7 +608,7 @@ public class VacationApartmentApp {
     /*
      * retrieve and print data of a particular student in the database
      */
-    private static int printStudent(int MatrNr) {
+    private static int printKunde(String vorOderNachnameCaseInsensitiv) {
 
         try {
 
@@ -572,8 +625,8 @@ public class VacationApartmentApp {
 
             PreparedStatement pstmt = theConnection.prepareStatement(sqlPreparedString);
 
-            pstmt.setInt(1, MatrNr);
-            DBISUtils.printlnDebugInfo("1. Parameter set to: " + MatrNr);
+            pstmt.setString(1, vorOderNachnameCaseInsensitiv);
+            DBISUtils.printlnDebugInfo("1. Parameter set to: " + vorOderNachnameCaseInsensitiv);
 
             ResultSet rs = pstmt.executeQuery();
 
