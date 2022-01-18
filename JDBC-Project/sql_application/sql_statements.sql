@@ -14,7 +14,10 @@ insert into kunden (kundennummer, vorname, nachname, geburtsdatum, telefonnummer
     values((select max(kundennummer) + 1 from kunden), newKundennummer, newVorname, newNachname, newGeburtsdatum, newTelefonnummer, newEmailAdresse, newIBAN);
 (select max(kundennummer) + 1 from kunden);
 
+with upperKunden as
+(select Kundennummer, upper(vorname) as Vorname, upper(nachname) as Nachname, Geburtsdatum, Telefonnummer, EmailAdresse, AdressID, IBAN
+    from kunden)
 select *
-    from kunden
-    where   vorname = upper('&name') or
-            nachname = upper('&name');
+    from upperKunden
+    where   vorname like upper('%?%') or
+            nachname like upper('sdf');

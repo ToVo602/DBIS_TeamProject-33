@@ -11,6 +11,7 @@ package de.htwg_kn.dbis.jdbc_application;
 
 
 import java.sql.*;
+import java.util.Locale;
 
 
 /*
@@ -222,7 +223,7 @@ public class VacationApartmentApp {
         String vorOderNachname = DBISUtils.readFromStdIn("Vor- oder Nachname");
 
         System.out.println();
-        int rowCount = printKunde(vorOderNachname);
+        int rowCount = printKunde(vorOderNachname.toUpperCase(Locale.ROOT));
 
         try {
 
@@ -616,9 +617,13 @@ public class VacationApartmentApp {
             //    NOTE: using a prepared statement does not provide any advantage here,
             //          since the prepared statement is executed only once!
 
-            String sqlPreparedString = "SELECT s.MatrNr, s.Name, s.Vorname, f.FB_ID, f.FB_Name " +
-                                       "FROM Student s, Fachbereich f " +
-                                       "WHERE s.fachbereich = f.FB_ID AND MatrNr = ?";
+            String sqlPreparedString = "with upperKunden as\n" +
+                    "(select Kundennummer, upper(vorname) as Vorname, upper(nachname) as Nachname, Geburtsdatum, Telefonnummer, EmailAdresse, AdressID, IBAN\n" +
+                    "    from kunden)\n" +
+                    "select *\n" +
+                    "    from upperKunden\n" +
+                    "    where   vorname like upper('%?%') or\n"
+                    + "          nachname like upper('%?%')";
 
             DBISUtils.printlnDebugInfo("SQL prepared statement is:");
             DBISUtils.printlnDebugInfo(sqlPreparedString);
@@ -627,6 +632,8 @@ public class VacationApartmentApp {
 
             pstmt.setString(1, vorOderNachnameCaseInsensitiv);
             DBISUtils.printlnDebugInfo("1. Parameter set to: " + vorOderNachnameCaseInsensitiv);
+            pstmt.setString(2, vorOderNachnameCaseInsensitiv);
+            DBISUtils.printlnDebugInfo("2. Parameter set to: " + vorOderNachnameCaseInsensitiv);
 
             ResultSet rs = pstmt.executeQuery();
 
