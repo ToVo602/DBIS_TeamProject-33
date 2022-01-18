@@ -618,17 +618,19 @@ public class VacationApartmentApp {
             //          since the prepared statement is executed only once!
 
             String sqlPreparedString = "with upperKunden as\n" +
-                    "(select Kundennummer, upper(vorname) as Vorname, upper(nachname) as Nachname, Geburtsdatum, Telefonnummer, EmailAdresse, AdressID, IBAN\n" +
+                    "(select Kundennummer, upper(vorname) as Vorname, upper(nachname) as Nachname\n" +
                     "    from kunden)\n" +
-                    "select *\n" +
-                    "    from upperKunden\n" +
-                    "    where   vorname like upper('%?%') or\n"
-                    + "          nachname like upper('%?%')";
+                    "select k.*\n" +
+                    "    from upperKunden uk, kunden k\n" +
+                    "    where   uk.Kundennummer = k.kundennummer and\n" +
+                    "            (uk.vorname like upper('%?%') or\n" +
+                    "            uk.nachname like upper('%?%'))";
 
             DBISUtils.printlnDebugInfo("SQL prepared statement is:");
             DBISUtils.printlnDebugInfo(sqlPreparedString);
 
             PreparedStatement pstmt = theConnection.prepareStatement(sqlPreparedString);
+            // DBISUtils.printlnDebugInfo("Prepared Statement wurde erstellt.");
 
             pstmt.setString(1, vorOderNachnameCaseInsensitiv);
             DBISUtils.printlnDebugInfo("1. Parameter set to: " + vorOderNachnameCaseInsensitiv);
