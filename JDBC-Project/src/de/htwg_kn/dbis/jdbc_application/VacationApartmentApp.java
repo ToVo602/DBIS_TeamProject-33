@@ -150,7 +150,6 @@ public class VacationApartmentApp {
                     //TODO: Method for adding a reservation or booking for a customer
                     //Actions: Select customer -> select vacation apartment -> enter period
                     //If available (ResultSet/rowCount == 0)), possibilities for reservation or booking or cancel
-                    //
                     //if not available (ResultSet/rowCount > 0), enter of a different period
                     fewoBelegen();
                     break;
@@ -233,6 +232,9 @@ public class VacationApartmentApp {
         int wohnungsID = DBISUtils.readIntFromStdIn("WohnungsID");
         System.out.println();
 
+        String buchungsdatum = DBISUtils.readDateFromStdIn("Heute ist der (dd.MM.yyyy)");
+        System.out.println();
+
         while (true) {
 
             String anreisetermin = DBISUtils.readDateFromStdIn("Wann möchten Sie anreisen?");
@@ -244,19 +246,18 @@ public class VacationApartmentApp {
                 int aktionsWahl = DBISUtils.readIntFromStdIn("Was möchten Sie ausführen (1, 2, 3)");
                 switch (aktionsWahl) {
                     case 1:
-                        addBelegung(anreisetermin, abreisetermin, "Reservierung", kundennummer, wohnungsID);
-                        break;
+                        addBelegung(anreisetermin, abreisetermin, buchungsdatum, "Reservierung", kundennummer, wohnungsID);
+                        return;
 
                     case 2:
-                        addBelegung(anreisetermin, abreisetermin, "Buchung", kundennummer, wohnungsID);
-                        break;
+                        addBelegung(anreisetermin, abreisetermin, buchungsdatum,"Buchung", kundennummer, wohnungsID);
+                        return;
 
                     case 3:
                         return;
                 }
             } else {
                 System.out.println("Die Wohnung ist zum gewählten Datum bereits belegt,\nwählen Sie einen neuen Zeitraum.");
-                System.out.println();
             }
         }
 
@@ -264,24 +265,22 @@ public class VacationApartmentApp {
     }
 
 
-
     private static boolean fewoIstFrei(int wohnungsID, String anreisetermin, String abreisetermin) {
         try {
 
             Statement stmt = theConnection.createStatement();
-
 
             //*** example of using a JDBC statement for SELECT ***
 
             String sqlString = "select distinct bel.belegungsnummer\n" +
                     "from ferienwohnungen fewo, belegungen bel\n" +
                     "where   bel.wohnungsid = fewo.wohnungsid and\n" +
-                    "        fewo.wohnungsid = '&wohnungsID' and\n" +
-                    "        ((bel.anreisetermin between '&anreisetermin' and '&abreisetermin')\n" +
+                    "        fewo.wohnungsid = '" + wohnungsID + "' and\n" +
+                    "        ((bel.anreisetermin between '" + anreisetermin + "' and '" + abreisetermin + "')\n" +
                     "        or\n" +
-                    "        (bel.abreisetermin between '&anreisetermin' and '&abreisetermin')\n" +
+                    "        (bel.abreisetermin between '" + anreisetermin + "' and '" + abreisetermin + "')\n" +
                     "        or\n" +
-                    "        (bel.anreisetermin < '&anreisetermin' and bel.abreisetermin > '&abreisetermin'))";
+                    "        (bel.anreisetermin < '" + anreisetermin + "' and bel.abreisetermin > '" + abreisetermin + "'))";
 
             DBISUtils.printlnDebugInfo("SQL statement is:");
             DBISUtils.printlnDebugInfo(sqlString);
@@ -339,7 +338,7 @@ public class VacationApartmentApp {
 
     }
 
-    private static void addBelegung(String anreisetermin, String abreisetermin, String statusflag, int belegtVon, int wohnungsid) {
+    private static void addBelegung(String anreisetermin, String abreisetermin, String buchungsdatum, String statusflag, int belegtVon, int wohnungsid) {
 
         try {
 
@@ -352,11 +351,11 @@ public class VacationApartmentApp {
 
             Statement stmt = theConnection.createStatement();
 
-            DateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
-            String buchungsdatum = dateFormat.format(LocalDate.now());
+            //DateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
+            //String buchungsdatum = dateFormat.format(LocalDate.now());
 
             String sqlString = "insert into belegungen (belegungsnummer, anreisetermin, abreisetermin, statusflag, buchungsdatum, belegtvon, wohnungsid)\n" +
-                    "    values(select max(belegungsnummer) + 1 from belegungen, '" + anreisetermin + "', '" + abreisetermin + "', '" + statusflag + "', " +
+                    "    values((select max(belegungsnummer) + 1 from belegungen), '" + anreisetermin + "', '" + abreisetermin + "', '" + statusflag + "', " +
                     "'" + buchungsdatum + "', '" + belegtVon + "', '" + wohnungsid + "')";
 
             DBISUtils.printlnDebugInfo("SQL statement is:");

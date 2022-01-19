@@ -223,7 +223,7 @@ create or replace function preis(Tage int, FeWoNr int)
 CREATE TABLE stornierteBuchungen(
     Stornonummer int primary key,
     Stornodatum date not null,
-    BuchungsNr int not null constraint ak_stornierteBuchungen unique,
+    BuchungsNr int not null, --constraint ak_stornierteBuchungen unique,
     Buchungsdatum date not null,
     Buchungsanfang date not null,
     Buchungsende date not null,
