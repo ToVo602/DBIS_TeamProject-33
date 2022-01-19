@@ -146,9 +146,10 @@ public class VacationApartmentApp {
                 case 3:
                     //TODO: Method for adding a reservation or booking for a customer
                     //Actions: Select customer -> select vacation apartment -> enter period
-                    //If available, possibilities for reservation or booking or cancel
-                    //if not available, enter of a different period
-                    addKunde();
+                    //If available (ResultSet/rowCount == 0)), possibilities for reservation or booking or cancel
+                    //
+                    //if not available (ResultSet/rowCount > 0), enter of a different period
+                    fewoBelegen();
                     break;
 
                 case 4:
@@ -178,7 +179,7 @@ public class VacationApartmentApp {
 
     /*
      * sub-menu and transaction for retrieving all students from the database
-     */
+
     private static void showStudents() {
 
         System.out.println("Alle Studierende anzeigen");
@@ -207,6 +208,95 @@ public class VacationApartmentApp {
 
 
     }
+     */
+
+    /*
+     * sub-menu and transaction for booking or reserve a vacation apartement in the database
+     */
+    private static void fewoBelegen() {
+
+        System.out.println("Ferienwohnung reservieren oder buchen");
+        System.out.println("-----------------------------------------");
+
+        System.out.println("Es gibt folgende Kunden:");
+        printKunden();
+        System.out.println("Für welchen Kunden möchten Sie eine Reservierung oder Buchung durchführen?");
+        int kundennummer = DBISUtils.readIntFromStdIn("Kundennummer");
+        System.out.println();
+
+        System.out.println("Es gibt folgende Ferienwohnungen:");
+        printFerienwohnungen();
+        System.out.println("Für welche Ferienwohnung möchten Sie eine Reservierung oder Buchung durchführen?");
+        int wohnungsID = DBISUtils.readIntFromStdIn("WohnungsID");
+        System.out.println();
+
+        String anreisetermin = DBISUtils.readDateFromStdIn("Wann möchten Sie anreisen?");
+        String abreisetermin = DBISUtils.readDateFromStdIn("Wann möchten Sie wieder abreisen?");
+        System.out.println();
+
+        if (fewoIstFrei(wohnungsID, anreisetermin, abreisetermin)){
+            System.out.println("Reservierung ausführen: 1\nBuchung ausführen: 2\nAbbruch Transaktion: 3");
+            int aktionsWahl = DBISUtils.readIntFromStdIn("Was möchten Sie ausführen (1, 2, 3)");
+            switch(aktionsWahl){
+                case 1:
+                    addBelegung(anreisetermin, abreisetermin, "Reservierung", kundennummer, wohnungsID);
+                    break;
+
+                case 2:
+                    addBelegung(anreisetermin, abreisetermin, "Buchung", kundennummer, wohnungsID);
+                    break;
+
+                case 3:
+                    return;
+            }
+        }
+
+
+
+
+    }
+
+
+
+    private static boolean fewoIstFrei(int wohnungsID, String anreisetermin, String abreisetermin) {
+        try {
+
+            Statement stmt = theConnection.createStatement();
+
+
+            //*** example of using a JDBC statement for SELECT ***
+
+            String sqlString = "select distinct bel.belegungsnummer\n" +
+                    "from ferienwohnungen fewo, belegungen bel\n" +
+                    "where   bel.wohnungsid = fewo.wohnungsid and\n" +
+                    "        fewo.wohnungsid = '&wohnungsID' and\n" +
+                    "        ((bel.anreisetermin between '&anreisetermin' and '&abreisetermin')\n" +
+                    "        or\n" +
+                    "        (bel.abreisetermin between '&anreisetermin' and '&abreisetermin')\n" +
+                    "        or\n" +
+                    "        (bel.anreisetermin < '&anreisetermin' and bel.abreisetermin > '&abreisetermin'))";
+
+            DBISUtils.printlnDebugInfo("SQL statement is:");
+            DBISUtils.printlnDebugInfo(sqlString);
+
+            ResultSet rs = stmt.executeQuery(sqlString);
+
+            int rowCount = DBISUtils.printResultSet(rs);
+
+            stmt.close();
+            rs.close();
+
+            if (rowCount == 0){
+                return true;
+            }
+
+        } catch (SQLException se) {
+
+            DBISUtils.decodeAndPrintAllSQLExceptions(se);
+
+        }
+        return false;
+    }
 
 
     /*
@@ -220,7 +310,7 @@ public class VacationApartmentApp {
         String vorOderNachname = DBISUtils.readFromStdIn("Vor- oder Nachname");
 
         System.out.println();
-        int rowCount = printKunde(vorOderNachname.toUpperCase(Locale.ROOT));
+        int rowCount = printKunden(vorOderNachname.toUpperCase(Locale.ROOT));
 
         try {
 
@@ -242,9 +332,69 @@ public class VacationApartmentApp {
 
     }
 
+    private static void addBelegung(String anreisetermin, String abreisetermin, String statusflag, int belegtVon, int wohnungsid) {
+
+        try {
+
+            //Note: application logic can be improved:
+            //      validate if user input is a valid "Fachbereichs-ID"
+            //      if user input is not valid, repeat user input or exit transaction on user request
+
+
+            //*** example of using a JDBC statement for for INSERT / UPDATE / DELETE ***
+
+            Statement stmtBankverbindungen = theConnection.createStatement();
+
+            String sqlStringBankverbindungen = "insert into belegungen (belegungsnummer, anreisetermin, abreisetermin, statusflag, buchungsdatum, belegtvon, wohnungsid)\n" +
+                    "    values(select max(belegungsnummer) + 1 from belegungen, )";
+
+            DBISUtils.printlnDebugInfo("SQL statement is:");
+            DBISUtils.printlnDebugInfo(sqlStringBankverbindungen);
+
+            int affectedRowsBankverbindungen = stmtBankverbindungen.executeUpdate(sqlStringBankverbindungen);
+
+            //commit the transaction
+            theConnection.commit();
+
+            //DBISUtils.printlnDebugInfo();
+            DBISUtils.printlnDebugInfo("Transaction committed!");
+
+            System.out.println();
+
+            if (affectedRowsBankverbindungen == 1) {
+                System.out.println("Die Bankverbindung " + newIBAN + " wurde hinzugefuegt.");
+            } else {
+                System.out.println("Die Bankverbindung " + newIBAN + " konnte nicht hinzugefuegt werden.");
+            }
+
+            stmtBankverbindungen.close();
+
+        } catch (SQLException se) {
+
+            DBISUtils.decodeAndPrintAllSQLExceptions(se);
+
+            try {
+
+                //abort the transaction
+                theConnection.rollback();
+
+                System.out.println("");
+                System.out.println("Transaction rolled back!");
+
+            } catch (SQLException e) {
+
+                DBISUtils.decodeAndPrintAllSQLExceptions(se);
+
+            }
+
+        }
+
+    }
+
+
 
     /*
-     * sub-menu and transaction for adding a student to the database
+     * sub-menu and transaction for adding a Customer to the database
      */
     private static void addKunde() {
 
@@ -479,7 +629,7 @@ public class VacationApartmentApp {
 
         try {
 
-            System.out.println("Reservierung oder Buchung l�schen");
+            System.out.println("Reservierung oder Buchung löschen");
             System.out.println("-----------------------------------------");
 
 
@@ -585,7 +735,7 @@ public class VacationApartmentApp {
     /*
      * retrieve and print data of a particular student in the database
      */
-    private static int printKunde(String vorOderNachnameCaseInsensitiv) {
+    private static int printKunden(String vorOderNachnameCaseInsensitiv) {
 
         try {
 
@@ -593,14 +743,10 @@ public class VacationApartmentApp {
             //    NOTE: using a prepared statement does not provide any advantage here,
             //          since the prepared statement is executed only once!
 
-            String sqlPreparedString = "with upperKunden as\n" +
-                    "(select Kundennummer, upper(vorname) as Vorname, upper(nachname) as Nachname\n" +
-                    "    from kunden)\n" +
-                    "select k.*\n" +
-                    "    from upperKunden uk, kunden k\n" +
-                    "    where   uk.Kundennummer = k.kundennummer and\n" +
-                    "            (uk.vorname like upper(%?%) or\n" +
-                    "            uk.nachname like upper(%?%))";
+            String sqlPreparedString = "select *\n" +
+                    "    from kunden\n" +
+                    "    where   upper(vorname) like ? or\n" +
+                    "            upper(nachname) like ?";
 
             DBISUtils.printlnDebugInfo("SQL prepared statement is:");
             DBISUtils.printlnDebugInfo(sqlPreparedString);
@@ -608,12 +754,13 @@ public class VacationApartmentApp {
             PreparedStatement pstmt = theConnection.prepareStatement(sqlPreparedString);
             // DBISUtils.printlnDebugInfo("Prepared Statement wurde erstellt.");
 
-            pstmt.setString(1, vorOderNachnameCaseInsensitiv);
+            pstmt.setString(1, "%" + vorOderNachnameCaseInsensitiv + "%");
             DBISUtils.printlnDebugInfo("1. Parameter set to: " + vorOderNachnameCaseInsensitiv);
-            pstmt.setString(2, vorOderNachnameCaseInsensitiv);
+            pstmt.setString(2, "%" + vorOderNachnameCaseInsensitiv + "%");
             DBISUtils.printlnDebugInfo("2. Parameter set to: " + vorOderNachnameCaseInsensitiv);
 
             ResultSet rs = pstmt.executeQuery();
+            // System.out.println("wird ausgeführt");
 
             int rowCount = DBISUtils.printResultSet(rs);
 
@@ -631,6 +778,79 @@ public class VacationApartmentApp {
         }
 
     }
+
+    private static int printFerienwohnungen() {
+
+        try {
+
+            Statement stmt = theConnection.createStatement();
+
+
+            //*** example of using a JDBC statement for SELECT ***
+
+            String sqlString = "select  fewo.wohnungsid, fewo.beschreibung, fewo.anzahl_zimmer, fewo.preis_pro_tag,\n" +
+                    "        fewo.groesse_qm, lae.name as Land, ad.strasse, ad.hausnummer, ad.plz, orte.name as Ort\n" +
+                    "    from ferienwohnungen fewo, adressen ad, orte, laender lae\n" +
+                    "    where   fewo.adressid = ad.adressid and\n" +
+                    "            ad.ortsid = orte.ortsid and\n" +
+                    "            orte.isocode = lae.isocode";
+
+            DBISUtils.printlnDebugInfo("SQL statement is:");
+            DBISUtils.printlnDebugInfo(sqlString);
+
+            ResultSet rs = stmt.executeQuery(sqlString);
+
+            int rowCount = DBISUtils.printResultSet(rs);
+
+            stmt.close();
+            rs.close();
+
+            return rowCount;
+
+        } catch (SQLException se) {
+
+            DBISUtils.decodeAndPrintAllSQLExceptions(se);
+
+            return -1;
+
+        }
+
+    }
+
+    private static int printKunden() {
+
+        try {
+
+            Statement stmt = theConnection.createStatement();
+
+
+            //*** example of using a JDBC statement for SELECT ***
+
+            String sqlString = "select kundennummer, vorname, nachname from kunden";
+
+            DBISUtils.printlnDebugInfo("SQL statement is:");
+            DBISUtils.printlnDebugInfo(sqlString);
+
+            ResultSet rs = stmt.executeQuery(sqlString);
+
+            int rowCount = DBISUtils.printResultSet(rs);
+
+            stmt.close();
+            rs.close();
+
+            return rowCount;
+
+        } catch (SQLException se) {
+
+            DBISUtils.decodeAndPrintAllSQLExceptions(se);
+
+            return -1;
+
+        }
+
+    }
+
+
 
 
     /*

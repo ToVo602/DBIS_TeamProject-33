@@ -22,11 +22,38 @@ select k.*
     where   uk.Kundennummer = k.kundennummer and
             (uk.vorname like upper('%ber%') or
             uk.nachname like upper('%ber%'));
+            
+            
+            
+select *
+    from kunden
+    where   upper(vorname) like upper('%ber%') or
+            upper(nachname) like upper('%ber%');
+            
 
 delete from belegungen where belegungsnummer = 1;
 
 select * from belegungen;
 
 delete from belegungen;
+
+select kundennummer, vorname, nachname from kunden;
+
+select  fewo.wohnungsid, fewo.beschreibung, fewo.anzahl_zimmer, fewo.preis_pro_tag,
+        fewo.groesse_qm, lae.name as Land, ad.strasse, ad.hausnummer, ad.plz, orte.name as Ort
+    from ferienwohnungen fewo, adressen ad, orte, laender lae
+    where   fewo.adressid = ad.adressid and
+            ad.ortsid = orte.ortsid and
+            orte.isocode = lae.isocode;
+
+select distinct bel.belegungsnummer
+from ferienwohnungen fewo, belegungen bel
+where   bel.wohnungsid = fewo.wohnungsid and
+        fewo.wohnungsid = '&wohnungsID' and
+        ((bel.anreisetermin between '&anreisetermin' and '&abreisetermin')
+        or
+        (bel.abreisetermin between '&anreisetermin' and '&abreisetermin')
+        or
+        (bel.anreisetermin < '&anreisetermin' and bel.abreisetermin > '&abreisetermin'));
 
 rollback;
