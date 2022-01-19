@@ -6,7 +6,7 @@
  *
  * This is not an example of (good) object-oriented programming ;-)
  */
- 
+
 package de.htwg_kn.dbis.jdbc_application;
 
 
@@ -44,8 +44,8 @@ public class VacationApartmentApp {
 
         //enable debug output
         DBISUtils.setDebugFlag(true);
-        
-        
+
+
         //connect to DBS instance
         try {
 
@@ -108,7 +108,6 @@ public class VacationApartmentApp {
     }
 
 
-
     /*
      * main loop: show command-line application's top menu
      */
@@ -134,38 +133,38 @@ public class VacationApartmentApp {
 
             switch (theChoice) {
 
-            case 1:
-                //TODO: Method for adding a new costumer -> by modifing addStudent() to addCustomer()
-                addKunde();
-                break;
+                case 1:
+                    //TODO: Method for adding a new costumer -> by modifing addStudent() to addCustomer()
+                    addKunde();
+                    break;
 
-            case 2:
-                //TODO: Method for case-insensitiv search of a customer by String in forename or familyname  -> by modifing showStudent to showCustomers()
-                showKunde();
-                break;
+                case 2:
+                    //TODO: Method for case-insensitiv search of a customer by String in forename or familyname  -> by modifing showStudent to showCustomers()
+                    showKunde();
+                    break;
 
-            case 3:
-                //TODO: Method for adding a reservation or booking for a customer
-                //Actions: Select customer -> select vacation apartment -> enter period
-                //If available, possibilities for reservation or booking or cancel
-                //if not available, enter of a different period
-                addKunde();
-                break;
+                case 3:
+                    //TODO: Method for adding a reservation or booking for a customer
+                    //Actions: Select customer -> select vacation apartment -> enter period
+                    //If available, possibilities for reservation or booking or cancel
+                    //if not available, enter of a different period
+                    addKunde();
+                    break;
 
-            case 4:
-                //TODO: Method for deleting a existing reservation of booking
-                //modifyStudent();
-                break;
+                case 4:
+                    //TODO: Method for deleting a existing reservation of booking
+                    deleteBelegung();
+                    break;
 
-            case 5:
-                System.out.println();
-                System.out.println();
-                System.out.println("Programm beenden ...");
-                return;
+                case 5:
+                    System.out.println();
+                    System.out.println();
+                    System.out.println("Programm beenden ...");
+                    return;
 
-            default:
-                System.out.println(theChoice + " ist keine gueltige Option!");
-                break;
+                default:
+                    System.out.println(theChoice + " ist keine gueltige Option!");
+                    break;
 
             }
 
@@ -175,7 +174,6 @@ public class VacationApartmentApp {
         }
 
     }
-
 
 
     /*
@@ -190,7 +188,7 @@ public class VacationApartmentApp {
         int rowCount = printOrte();
 
         try {
-        	
+
             if (rowCount >= 0) {
 
                 //commit the (read-only) transaction,
@@ -199,9 +197,9 @@ public class VacationApartmentApp {
 
                 DBISUtils.printlnDebugInfo("(Read-only) Transaction committed!");
 
-                }
+            }
 
-            } catch (SQLException se) {
+        } catch (SQLException se) {
 
             DBISUtils.decodeAndPrintAllSQLExceptions(se);
 
@@ -209,7 +207,6 @@ public class VacationApartmentApp {
 
 
     }
-
 
 
     /*
@@ -244,7 +241,6 @@ public class VacationApartmentApp {
         }
 
     }
-
 
 
     /*
@@ -329,22 +325,19 @@ public class VacationApartmentApp {
 
             if (affectedRowsBankverbindungen == 1) {
                 System.out.println("Die Bankverbindung " + newIBAN + " wurde hinzugefuegt.");
-            }
-            else {
+            } else {
                 System.out.println("Die Bankverbindung " + newIBAN + " konnte nicht hinzugefuegt werden.");
             }
 
             if (affectedRowsAdressen == 1) {
                 System.out.println("Die Adresse " + newStrasse + " " + newHausnummer + " wurde hinzugefuegt.");
-            }
-            else {
+            } else {
                 System.out.println("Die Adresse " + newStrasse + " " + newHausnummer + " konnte nicht hinzugefuegt werden.");
             }
 
             if (affectedRowsKunden == 1) {
                 System.out.println("Der Kunde " + newVorname + " " + newNachname + " wurde hinzugefuegt.");
-            }
-            else {
+            } else {
                 System.out.println("Der Kunde " + newVorname + " " + newNachname + " konnte nicht hinzugefuegt werden.");
             }
 
@@ -479,64 +472,49 @@ public class VacationApartmentApp {
      */
 
 
-
     /*
      * sub-menu and transaction for removing students from the database
      */
-    private static void deleteStudent() {
+    private static void deleteBelegung() {
 
         try {
 
-            System.out.println("Studierende l�schen");
+            System.out.println("Reservierung oder Buchung l�schen");
             System.out.println("-----------------------------------------");
-
-            //flag indicates if (another) student should be deleted
-            int flag = 1;
 
 
             //*** example of using a JDBC prepared statement for INSERT / UPDATE / DELETE ***
             //    NOTE: using a prepared statement makes sense here,
             //          since the prepared statement is potentially executed more than once!
 
-            String sqlPreparedString = "DELETE FROM Student WHERE MatrNr = ?";
+            String sqlPreparedString = "delete from belegungen where belegungsnummer = ?";
 
             DBISUtils.printlnDebugInfo("SQL prepared statement is:");
             DBISUtils.printlnDebugInfo(sqlPreparedString);
 
             PreparedStatement pstmt = theConnection.prepareStatement(sqlPreparedString);
 
-            while (flag == 1) {
+            System.out.println("Es gibt folgende Belegungen:");
+            printBelegungen();
 
-                System.out.println("Es gibt folgende Studierende:");
-                printOrte();
+            int belegungsnummer = DBISUtils.readIntFromStdIn("Nummer der zu l�schenden Belegung");
 
-                int MatrNr = DBISUtils.readIntFromStdIn("Matrikelnummer des zu l�schenden Studierenden");
+            pstmt.setInt(1, belegungsnummer);
+            DBISUtils.printlnDebugInfo("1. parameter set to: " + belegungsnummer);
 
-                pstmt.setInt(1, MatrNr);
-                DBISUtils.printlnDebugInfo("1. parameter set to: " + MatrNr);
+            int affectedRows = pstmt.executeUpdate();
 
-                int affectedRows = pstmt.executeUpdate();
+            //commit the transaction
+            theConnection.commit();
 
-                //commit the transaction
-                theConnection.commit();
+            DBISUtils.printlnDebugInfo("Transaction committed!");
 
-                DBISUtils.printlnDebugInfo("Transaction committed!");
+            System.out.println();
 
-                System.out.println();
-
-                if (affectedRows == 1) {
-                    System.out.println("Der Studierende mit MatrNr " + MatrNr + " wurde gel�scht.");
-                }
-                else {
-                    System.out.println("Der Studierende mit MatrNr " + MatrNr + " existierte nicht.");
-                }
-
-                flag = DBISUtils.readIntFromStdIn("Weitere Studierende l�schen (1 f�r ja)?");
-
-                if (flag == 1) {
-                    System.out.println();
-                }
-
+            if (affectedRows == 1) {
+                System.out.println("Die Belegung " + belegungsnummer + " wurde gel�scht.");
+            } else {
+                System.out.println("Die Belegung " + belegungsnummer + " konnte nicht gel�scht werden.");
             }
 
             pstmt.close();
@@ -562,7 +540,6 @@ public class VacationApartmentApp {
         }
 
     }
-
 
 
     /*
@@ -605,7 +582,6 @@ public class VacationApartmentApp {
     }
 
 
-
     /*
      * retrieve and print data of a particular student in the database
      */
@@ -623,8 +599,8 @@ public class VacationApartmentApp {
                     "select k.*\n" +
                     "    from upperKunden uk, kunden k\n" +
                     "    where   uk.Kundennummer = k.kundennummer and\n" +
-                    "            (uk.vorname like upper('%?%') or\n" +
-                    "            uk.nachname like upper('%?%'))";
+                    "            (uk.vorname like upper(%?%) or\n" +
+                    "            uk.nachname like upper(%?%))";
 
             DBISUtils.printlnDebugInfo("SQL prepared statement is:");
             DBISUtils.printlnDebugInfo(sqlPreparedString);
@@ -657,11 +633,10 @@ public class VacationApartmentApp {
     }
 
 
-
     /*
      * retrieve and print a list of all departments ("Fachbereiche") in the database
      */
-    private static int printFachbereiche() {
+    private static int printBelegungen() {
 
         try {
 
@@ -669,8 +644,7 @@ public class VacationApartmentApp {
 
             Statement stmt = theConnection.createStatement();
 
-            String sqlString = "SELECT f.FB_ID, f.FB_Name " +
-                               "FROM Fachbereich f";
+            String sqlString = "select * from belegungen";
 
             DBISUtils.printlnDebugInfo("SQL statement is:");
             DBISUtils.printlnDebugInfo(sqlString);
@@ -693,8 +667,6 @@ public class VacationApartmentApp {
         }
 
     }
-
-
 
 
 }

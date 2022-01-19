@@ -15,9 +15,18 @@ insert into kunden (kundennummer, vorname, nachname, geburtsdatum, telefonnummer
 (select max(kundennummer) + 1 from kunden);
 
 with upperKunden as
-(select Kundennummer, upper(vorname) as Vorname, upper(nachname) as Nachname, Geburtsdatum, Telefonnummer, EmailAdresse, AdressID, IBAN
+(select Kundennummer, upper(vorname) as Vorname, upper(nachname) as Nachname
     from kunden)
-select *
-    from upperKunden
-    where   vorname like upper('%?%') or
-            nachname like upper('sdf');
+select k.*
+    from upperKunden uk, kunden k
+    where   uk.Kundennummer = k.kundennummer and
+            (uk.vorname like upper('%ber%') or
+            uk.nachname like upper('%ber%'));
+
+delete from belegungen where belegungsnummer = 1;
+
+select * from belegungen;
+
+delete from belegungen;
+
+rollback;

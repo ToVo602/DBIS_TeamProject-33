@@ -42,6 +42,8 @@ delete from zusatzausstattungen;
 
 delete from laender;
 
+delete from storniertebuchungen;
+
 /*alter table flughaefen
     enable constraint fk_flughaefen_adressen;*/
 
