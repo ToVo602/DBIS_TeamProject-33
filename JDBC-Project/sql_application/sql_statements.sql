@@ -13,23 +13,11 @@ insert into adresse (adressid, hausnummer, strasse, plz, ortsid)
 insert into kunden (kundennummer, vorname, nachname, geburtsdatum, telefonnummer, emailadresse, iban)
     values((select max(kundennummer) + 1 from kunden), newKundennummer, newVorname, newNachname, newGeburtsdatum, newTelefonnummer, newEmailAdresse, newIBAN);
 (select max(kundennummer) + 1 from kunden);
-
-with upperKunden as
-(select Kundennummer, upper(vorname) as Vorname, upper(nachname) as Nachname
-    from kunden)
-select k.*
-    from upperKunden uk, kunden k
-    where   uk.Kundennummer = k.kundennummer and
-            (uk.vorname like upper('%ber%') or
-            uk.nachname like upper('%ber%'));
-            
-            
-            
+                    
 select *
     from kunden
     where   upper(vorname) like upper('%ber%') or
             upper(nachname) like upper('%ber%');
-            
 
 delete from belegungen where belegungsnummer = 1;
 
@@ -55,5 +43,9 @@ where   bel.wohnungsid = fewo.wohnungsid and
         (bel.abreisetermin between '&anreisetermin' and '&abreisetermin')
         or
         (bel.anreisetermin < '&anreisetermin' and bel.abreisetermin > '&abreisetermin'));
+
+insert into belegungen (belegungsnummer, anreisetermin, abreisetermin, statusflag, buchungsdatum, belegtvon, wohnungsid)
+    values(select max(belegungsnummer) + 1 from belegungen, );
+
 
 rollback;

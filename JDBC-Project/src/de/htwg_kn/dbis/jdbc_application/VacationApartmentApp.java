@@ -11,6 +11,9 @@ package de.htwg_kn.dbis.jdbc_application;
 
 
 import java.sql.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.Locale;
 
 
@@ -230,28 +233,32 @@ public class VacationApartmentApp {
         int wohnungsID = DBISUtils.readIntFromStdIn("WohnungsID");
         System.out.println();
 
-        String anreisetermin = DBISUtils.readDateFromStdIn("Wann möchten Sie anreisen?");
-        String abreisetermin = DBISUtils.readDateFromStdIn("Wann möchten Sie wieder abreisen?");
-        System.out.println();
+        while (true) {
 
-        if (fewoIstFrei(wohnungsID, anreisetermin, abreisetermin)){
-            System.out.println("Reservierung ausführen: 1\nBuchung ausführen: 2\nAbbruch Transaktion: 3");
-            int aktionsWahl = DBISUtils.readIntFromStdIn("Was möchten Sie ausführen (1, 2, 3)");
-            switch(aktionsWahl){
-                case 1:
-                    addBelegung(anreisetermin, abreisetermin, "Reservierung", kundennummer, wohnungsID);
-                    break;
+            String anreisetermin = DBISUtils.readDateFromStdIn("Wann möchten Sie anreisen?");
+            String abreisetermin = DBISUtils.readDateFromStdIn("Wann möchten Sie wieder abreisen?");
+            System.out.println();
 
-                case 2:
-                    addBelegung(anreisetermin, abreisetermin, "Buchung", kundennummer, wohnungsID);
-                    break;
+            if (fewoIstFrei(wohnungsID, anreisetermin, abreisetermin)) {
+                System.out.println("Reservierung ausführen: 1\nBuchung ausführen: 2\nAbbruch Transaktion: 3");
+                int aktionsWahl = DBISUtils.readIntFromStdIn("Was möchten Sie ausführen (1, 2, 3)");
+                switch (aktionsWahl) {
+                    case 1:
+                        addBelegung(anreisetermin, abreisetermin, "Reservierung", kundennummer, wohnungsID);
+                        break;
 
-                case 3:
-                    return;
+                    case 2:
+                        addBelegung(anreisetermin, abreisetermin, "Buchung", kundennummer, wohnungsID);
+                        break;
+
+                    case 3:
+                        return;
+                }
+            } else {
+                System.out.println("Die Wohnung ist zum gewählten Datum bereits belegt,\nwählen Sie einen neuen Zeitraum.");
+                System.out.println();
             }
         }
-
-
 
 
     }
@@ -343,15 +350,19 @@ public class VacationApartmentApp {
 
             //*** example of using a JDBC statement for for INSERT / UPDATE / DELETE ***
 
-            Statement stmtBankverbindungen = theConnection.createStatement();
+            Statement stmt = theConnection.createStatement();
 
-            String sqlStringBankverbindungen = "insert into belegungen (belegungsnummer, anreisetermin, abreisetermin, statusflag, buchungsdatum, belegtvon, wohnungsid)\n" +
-                    "    values(select max(belegungsnummer) + 1 from belegungen, )";
+            DateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
+            String buchungsdatum = dateFormat.format(LocalDate.now());
+
+            String sqlString = "insert into belegungen (belegungsnummer, anreisetermin, abreisetermin, statusflag, buchungsdatum, belegtvon, wohnungsid)\n" +
+                    "    values(select max(belegungsnummer) + 1 from belegungen, '" + anreisetermin + "', '" + abreisetermin + "', '" + statusflag + "', " +
+                    "'" + buchungsdatum + "', '" + belegtVon + "', '" + wohnungsid + "')";
 
             DBISUtils.printlnDebugInfo("SQL statement is:");
-            DBISUtils.printlnDebugInfo(sqlStringBankverbindungen);
+            DBISUtils.printlnDebugInfo(sqlString);
 
-            int affectedRowsBankverbindungen = stmtBankverbindungen.executeUpdate(sqlStringBankverbindungen);
+            int affectedRows = stmt.executeUpdate(sqlString);
 
             //commit the transaction
             theConnection.commit();
@@ -361,13 +372,13 @@ public class VacationApartmentApp {
 
             System.out.println();
 
-            if (affectedRowsBankverbindungen == 1) {
-                System.out.println("Die Bankverbindung " + newIBAN + " wurde hinzugefuegt.");
+            if (affectedRows == 1) {
+                System.out.println("Die Belegung für die Wohnung " + wohnungsid + " wurde hinzugefuegt.");
             } else {
-                System.out.println("Die Bankverbindung " + newIBAN + " konnte nicht hinzugefuegt werden.");
+                System.out.println("Die Belegung für die Wohnung " + wohnungsid + " konnte nicht hinzugefuegt werden.");
             }
 
-            stmtBankverbindungen.close();
+            stmt.close();
 
         } catch (SQLException se) {
 
