@@ -246,9 +246,10 @@ public class VacationApartmentApp {
         }
 
         //TODO: buchungsdatum mit dem aktuellen Datum befüllen
-        String buchungsdatum = DBISUtils.readDateFromStdIn("Heute ist der (dd.MM.yyyy)");
-        System.out.println();
+        //String buchungsdatum = DBISUtils.readDateFromStdIn("Heute ist der (dd.MM.yyyy)");
+        //System.out.println();
 
+        //TODO: Schleifen-Problematik auflösen
         while (true) {
             String anreisetermin;
             String abreisetermin;
@@ -270,24 +271,26 @@ public class VacationApartmentApp {
 
             while (true) {
                 if (fewoIstFrei(wohnungsID, anreisetermin, abreisetermin)) {
-                    System.out.println("Reservierung ausführen: 1\nBuchung ausführen: 2\nAbbruch Transaktion: 3");
-                    int aktionsWahl = DBISUtils.readIntFromStdIn("Was möchten Sie ausführen (1, 2, 3)");
-                    switch (aktionsWahl) {
-                        case 1:
-                            addBelegung(anreisetermin, abreisetermin, buchungsdatum, "Reservierung", kundennummer, wohnungsID);
-                            return;
+                    while(true) {
+                        System.out.println("Reservierung ausführen: 1\nBuchung ausführen: 2\nAbbruch Transaktion: 3");
+                        int aktionsWahl = DBISUtils.readIntFromStdIn("Was möchten Sie ausführen (1, 2, 3)");
+                        switch (aktionsWahl) {
+                            case 1:
+                                addBelegung(anreisetermin, abreisetermin, "Reservierung", kundennummer, wohnungsID);
+                                return;
 
-                        case 2:
-                            addBelegung(anreisetermin, abreisetermin, buchungsdatum, "Buchung", kundennummer, wohnungsID);
-                            return;
+                            case 2:
+                                addBelegung(anreisetermin, abreisetermin, "Buchung", kundennummer, wohnungsID);
+                                return;
 
-                        case 3:
-                            return;
+                            case 3:
+                                return;
 
-                        default:
-                            System.out.println(aktionsWahl + "ist kein gültige Option");
-                            System.out.println();
+                            default:
+                                System.out.println(aktionsWahl + "ist kein gültige Option");
+                                System.out.println();
 
+                        }
                     }
                 } else {
                     System.out.println("Die Wohnung ist zum gewählten Datum bereits belegt,\nwählen Sie einen neuen Zeitraum.");
@@ -406,7 +409,7 @@ public class VacationApartmentApp {
 
     }
 
-    private static void addBelegung(String anreisetermin, String abreisetermin, String buchungsdatum, String statusflag, int belegtVon, int wohnungsid) {
+    private static void addBelegung(String anreisetermin, String abreisetermin, String statusflag, int belegtVon, int wohnungsid) {
 
         try {
 
@@ -424,7 +427,7 @@ public class VacationApartmentApp {
 
             String sqlString = "insert into belegungen (belegungsnummer, anreisetermin, abreisetermin, statusflag, buchungsdatum, belegtvon, wohnungsid)\n" +
                     "    values((select max(belegungsnummer) + 1 from belegungen), '" + anreisetermin + "', '" + abreisetermin + "', '" + statusflag + "', " +
-                    "'" + buchungsdatum + "', '" + belegtVon + "', '" + wohnungsid + "')";
+                    "CURRENT_DATE, '" + belegtVon + "', '" + wohnungsid + "')";
 
             DBISUtils.printlnDebugInfo("SQL statement is:");
             DBISUtils.printlnDebugInfo(sqlString);
