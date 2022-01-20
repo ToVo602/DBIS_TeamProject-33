@@ -443,6 +443,10 @@ public class DBISUtils {
 
     }
 
+    public static String convertEuropeanToEnglishDate(String date){
+        return date.substring(date.length() - 4) + "." + date.substring(3, 5) + "." + date.substring(0, 2);
+    }
+
 
 
 

@@ -15,6 +15,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.Locale;
+import java.util.Scanner;
 
 
 /*
@@ -216,13 +217,13 @@ public class VacationApartmentApp {
         System.out.println("Es gibt folgende Kunden:");
         printKunden();
         int kundennummer;
-        while(true) {
+        while (true) {
             System.out.println("Für welchen Kunden möchten Sie eine Reservierung oder Buchung durchführen?");
             kundennummer = DBISUtils.readIntFromStdIn("Kundennummer");
 
-            if(validPrimaryKey("kunden", "kundennummer", kundennummer)){
+            if (validPrimaryKey("kunden", "kundennummer", kundennummer)) {
                 break;
-            }else{
+            } else {
                 System.out.println("Der angegebene Wert kann keinem Kunden zugeordnet werden");
                 System.out.println();
             }
@@ -232,25 +233,40 @@ public class VacationApartmentApp {
         System.out.println("Es gibt folgende Ferienwohnungen:");
         printFerienwohnungen();
         int wohnungsID;
-        while(true) {
+        while (true) {
             System.out.println("Für welche Ferienwohnung möchten Sie eine Reservierung oder Buchung durchführen?");
             wohnungsID = DBISUtils.readIntFromStdIn("WohnungsID");
-            if(validPrimaryKey("ferienwohnungen", "wohnungsid", wohnungsID)){
+            if (validPrimaryKey("ferienwohnungen", "wohnungsid", wohnungsID)) {
                 break;
-            } else{
+            } else {
                 System.out.println("Für den eingegebenen Wert konnte keine gültige Wohnung gefunden werden");
                 System.out.println();
             }
 
         }
 
+        //TODO: buchungsdatum mit dem aktuellen Datum befüllen
         String buchungsdatum = DBISUtils.readDateFromStdIn("Heute ist der (dd.MM.yyyy)");
         System.out.println();
 
         while (true) {
-            String anreisetermin = DBISUtils.readDateFromStdIn("Wann möchten Sie anreisen?");
-            String abreisetermin = DBISUtils.readDateFromStdIn("Wann möchten Sie wieder abreisen?");
-            System.out.println();
+            String anreisetermin;
+            String abreisetermin;
+            while (true) {
+                anreisetermin = DBISUtils.readDateFromStdIn("Wann möchten Sie anreisen?");
+                String modifiedAnreisetermin = DBISUtils.convertEuropeanToEnglishDate(anreisetermin);
+                abreisetermin = DBISUtils.readDateFromStdIn("Wann möchten Sie wieder abreisen?");
+                String modifiedAbreisetermin = DBISUtils.convertEuropeanToEnglishDate(abreisetermin);
+                System.out.println();
+
+                if (modifiedAnreisetermin.compareTo(modifiedAbreisetermin) <= 0) {
+                    break;
+                } else {
+                    System.out.println("Das Abreisedatum kann nicht vor dem Anreisedatum stehen");
+                    System.out.println();
+                }
+
+            }
 
             while (true) {
                 if (fewoIstFrei(wohnungsID, anreisetermin, abreisetermin)) {
@@ -310,7 +326,7 @@ public class VacationApartmentApp {
             stmt.close();
             rs.close();
 
-            if (rowCount == 0){
+            if (rowCount == 0) {
                 return true;
             }
 
@@ -322,7 +338,7 @@ public class VacationApartmentApp {
         return false;
     }
 
-    private static boolean validPrimaryKey(String tableName, String attributeName, int keyValue){
+    private static boolean validPrimaryKey(String tableName, String attributeName, int keyValue) {
         try {
 
             Statement stmt = theConnection.createStatement();
@@ -344,7 +360,7 @@ public class VacationApartmentApp {
             stmt.close();
             rs.close();
 
-            if(numberOfTupel == 1){
+            if (numberOfTupel == 1) {
                 return true;
             }
 
@@ -454,7 +470,6 @@ public class VacationApartmentApp {
     }
 
 
-
     /*
      * sub-menu and transaction for adding a Customer to the database
      */
@@ -485,9 +500,9 @@ public class VacationApartmentApp {
             while (true) {
                 newOrtsID = DBISUtils.readIntFromStdIn("Geben Sie eine OrtsID aus der Liste ein");
 
-                if(validPrimaryKey("orte", "ortsid", newOrtsID)){
+                if (validPrimaryKey("orte", "ortsid", newOrtsID)) {
                     break;
-                } else{
+                } else {
                     System.out.println("Der eingegebene Wert gehört nicht zu einem Ort");
                     System.out.println();
                 }
@@ -721,9 +736,9 @@ public class VacationApartmentApp {
             int belegungsnummer;
             while (true) {
                 belegungsnummer = DBISUtils.readIntFromStdIn("Nummer der zu l�schenden Belegung");
-                if(validPrimaryKey("belegungen", "belegungsnummer", belegungsnummer)){
+                if (validPrimaryKey("belegungen", "belegungsnummer", belegungsnummer)) {
                     break;
-                } else{
+                } else {
                     System.out.println("Die gegebene Nummer konnte nicht einer Belegung zugeordnet werden");
                     System.out.println();
                 }
@@ -929,8 +944,6 @@ public class VacationApartmentApp {
         }
 
     }
-
-
 
 
     /*
