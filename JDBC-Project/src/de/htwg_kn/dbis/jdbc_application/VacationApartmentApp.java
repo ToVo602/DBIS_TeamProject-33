@@ -137,25 +137,18 @@ public class VacationApartmentApp {
             switch (theChoice) {
 
                 case 1:
-                    //TODO: Method for adding a new costumer -> by modifing addStudent() to addCustomer()
                     addKunde();
                     break;
 
                 case 2:
-                    //TODO: Method for case-insensitiv search of a customer by String in forename or familyname  -> by modifing showStudent to showCustomers()
                     showKunde();
                     break;
 
                 case 3:
-                    //TODO: Method for adding a reservation or booking for a customer
-                    //Actions: Select customer -> select vacation apartment -> enter period
-                    //If available (ResultSet/rowCount == 0)), possibilities for reservation or booking or cancel
-                    //if not available (ResultSet/rowCount > 0), enter of a different period
                     fewoBelegen();
                     break;
 
                 case 4:
-                    //TODO: Method for deleting a existing reservation of booking
                     deleteBelegung();
                     break;
 
@@ -222,45 +215,70 @@ public class VacationApartmentApp {
 
         System.out.println("Es gibt folgende Kunden:");
         printKunden();
-        System.out.println("Für welchen Kunden möchten Sie eine Reservierung oder Buchung durchführen?");
-        int kundennummer = DBISUtils.readIntFromStdIn("Kundennummer");
-        System.out.println();
+        int kundennummer;
+        while(true) {
+            System.out.println("Für welchen Kunden möchten Sie eine Reservierung oder Buchung durchführen?");
+            kundennummer = DBISUtils.readIntFromStdIn("Kundennummer");
+
+            if(validPrimaryKey("kunden", "kundennummer", kundennummer)){
+                break;
+            }else{
+                System.out.println("Der angegebene Wert kann keinem Kunden zugeordnet werden");
+                System.out.println();
+            }
+        }
+
 
         System.out.println("Es gibt folgende Ferienwohnungen:");
         printFerienwohnungen();
-        System.out.println("Für welche Ferienwohnung möchten Sie eine Reservierung oder Buchung durchführen?");
-        int wohnungsID = DBISUtils.readIntFromStdIn("WohnungsID");
-        System.out.println();
+        int wohnungsID;
+        while(true) {
+            System.out.println("Für welche Ferienwohnung möchten Sie eine Reservierung oder Buchung durchführen?");
+            wohnungsID = DBISUtils.readIntFromStdIn("WohnungsID");
+            if(validPrimaryKey("ferienwohnungen", "wohnungsid", wohnungsID)){
+                break;
+            } else{
+                System.out.println("Für den eingegebenen Wert konnte keine gültige Wohnung gefunden werden");
+                System.out.println();
+            }
+
+        }
 
         String buchungsdatum = DBISUtils.readDateFromStdIn("Heute ist der (dd.MM.yyyy)");
         System.out.println();
 
         while (true) {
-
             String anreisetermin = DBISUtils.readDateFromStdIn("Wann möchten Sie anreisen?");
             String abreisetermin = DBISUtils.readDateFromStdIn("Wann möchten Sie wieder abreisen?");
             System.out.println();
 
-            if (fewoIstFrei(wohnungsID, anreisetermin, abreisetermin)) {
-                System.out.println("Reservierung ausführen: 1\nBuchung ausführen: 2\nAbbruch Transaktion: 3");
-                int aktionsWahl = DBISUtils.readIntFromStdIn("Was möchten Sie ausführen (1, 2, 3)");
-                switch (aktionsWahl) {
-                    case 1:
-                        addBelegung(anreisetermin, abreisetermin, buchungsdatum, "Reservierung", kundennummer, wohnungsID);
-                        return;
+            while (true) {
+                if (fewoIstFrei(wohnungsID, anreisetermin, abreisetermin)) {
+                    System.out.println("Reservierung ausführen: 1\nBuchung ausführen: 2\nAbbruch Transaktion: 3");
+                    int aktionsWahl = DBISUtils.readIntFromStdIn("Was möchten Sie ausführen (1, 2, 3)");
+                    switch (aktionsWahl) {
+                        case 1:
+                            addBelegung(anreisetermin, abreisetermin, buchungsdatum, "Reservierung", kundennummer, wohnungsID);
+                            return;
 
-                    case 2:
-                        addBelegung(anreisetermin, abreisetermin, buchungsdatum,"Buchung", kundennummer, wohnungsID);
-                        return;
+                        case 2:
+                            addBelegung(anreisetermin, abreisetermin, buchungsdatum, "Buchung", kundennummer, wohnungsID);
+                            return;
 
-                    case 3:
-                        return;
+                        case 3:
+                            return;
+
+                        default:
+                            System.out.println(aktionsWahl + "ist kein gültige Option");
+                            System.out.println();
+
+                    }
+                } else {
+                    System.out.println("Die Wohnung ist zum gewählten Datum bereits belegt,\nwählen Sie einen neuen Zeitraum.");
+                    break;
                 }
-            } else {
-                System.out.println("Die Wohnung ist zum gewählten Datum bereits belegt,\nwählen Sie einen neuen Zeitraum.");
             }
         }
-
 
     }
 
@@ -293,6 +311,40 @@ public class VacationApartmentApp {
             rs.close();
 
             if (rowCount == 0){
+                return true;
+            }
+
+        } catch (SQLException se) {
+
+            DBISUtils.decodeAndPrintAllSQLExceptions(se);
+
+        }
+        return false;
+    }
+
+    private static boolean validPrimaryKey(String tableName, String attributeName, int keyValue){
+        try {
+
+            Statement stmt = theConnection.createStatement();
+
+            //*** example of using a JDBC statement for SELECT ***
+
+            String sqlString = "select count(*) from " + tableName + " where " + attributeName + " = " + keyValue;
+
+            DBISUtils.printlnDebugInfo("SQL statement is:");
+            DBISUtils.printlnDebugInfo(sqlString);
+
+            ResultSet rs = stmt.executeQuery(sqlString);
+
+            rs.next();
+            int numberOfTupel = rs.getInt(1);
+
+            //int rowCount = DBISUtils.printResultSet(rs);
+
+            stmt.close();
+            rs.close();
+
+            if(numberOfTupel == 1){
                 return true;
             }
 
@@ -429,8 +481,17 @@ public class VacationApartmentApp {
             System.out.println("Es gibt folgende Orte:");
             printOrte();
 
-            //TODO: ID wird erstmals als korrekt festgelegt, aber Check muss noch eingebaut werden.
-            String newOrtsID = DBISUtils.readFromStdIn("Geben Sie eine OrtsID aus der Liste ein");
+            int newOrtsID;
+            while (true) {
+                newOrtsID = DBISUtils.readIntFromStdIn("Geben Sie eine OrtsID aus der Liste ein");
+
+                if(validPrimaryKey("orte", "ortsid", newOrtsID)){
+                    break;
+                } else{
+                    System.out.println("Der eingegebene Wert gehört nicht zu einem Ort");
+                    System.out.println();
+                }
+            }
 
             String newPLZ = DBISUtils.readFromStdIn("PLZ");
             String newStrasse = DBISUtils.readFromStdIn("Strasse");
@@ -657,7 +718,16 @@ public class VacationApartmentApp {
             System.out.println("Es gibt folgende Belegungen:");
             printBelegungen();
 
-            int belegungsnummer = DBISUtils.readIntFromStdIn("Nummer der zu l�schenden Belegung");
+            int belegungsnummer;
+            while (true) {
+                belegungsnummer = DBISUtils.readIntFromStdIn("Nummer der zu l�schenden Belegung");
+                if(validPrimaryKey("belegungen", "belegungsnummer", belegungsnummer)){
+                    break;
+                } else{
+                    System.out.println("Die gegebene Nummer konnte nicht einer Belegung zugeordnet werden");
+                    System.out.println();
+                }
+            }
 
             pstmt.setInt(1, belegungsnummer);
             DBISUtils.printlnDebugInfo("1. parameter set to: " + belegungsnummer);

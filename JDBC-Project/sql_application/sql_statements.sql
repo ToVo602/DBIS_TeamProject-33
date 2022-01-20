@@ -47,5 +47,9 @@ where   bel.wohnungsid = fewo.wohnungsid and
 insert into belegungen (belegungsnummer, anreisetermin, abreisetermin, statusflag, buchungsdatum, belegtvon, wohnungsid)
     values(select max(belegungsnummer) + 1 from belegungen, );
 
+select count(*)
+    from    belegungen
+    where   belegungsnummer = '';
+
 
 rollback;
