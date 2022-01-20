@@ -9,14 +9,8 @@
 
 package de.htwg_kn.dbis.jdbc_application;
 
-
 import java.sql.*;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.time.LocalDate;
 import java.util.Locale;
-import java.util.Scanner;
-
 
 /*
  * Vacation Apartment Application:
@@ -24,15 +18,13 @@ import java.util.Scanner;
  *
  * Author: Prof. Dr. Juergen Waesch, HTWG Konstanz
  * Extended by: Tobias Vogler, Dirk Bechtold, Dominik Gessler, HTWG Konstanz
- * Last modified: Jan 13, 2022
+ * Last modified: Jan 20, 2022
  *
  */
 public class VacationApartmentApp {
 
-
     //reference to the JDBC connection for the used DBS instance
     private static Connection theConnection = null;
-
 
     /*
      * Application's main method:
@@ -48,7 +40,6 @@ public class VacationApartmentApp {
 
         //enable debug output
         DBISUtils.setDebugFlag(true);
-
 
         //connect to DBS instance
         try {
@@ -70,11 +61,9 @@ public class VacationApartmentApp {
 
         }
 
-
         //invoke main loop: show application's top menu
         System.out.println();
         showTopMenu();
-
 
         //disconnect from DBS instance
         System.out.println();
@@ -132,11 +121,9 @@ public class VacationApartmentApp {
 
             // input scan:
             int theChoice = DBISUtils.readIntFromStdIn("Option");
-
             System.out.println();
 
             switch (theChoice) {
-
                 case 1:
                     addKunde();
                     break;
@@ -155,56 +142,18 @@ public class VacationApartmentApp {
 
                 case 5:
                     System.out.println();
-                    System.out.println();
                     System.out.println("Programm beenden ...");
                     return;
 
                 default:
                     System.out.println(theChoice + " ist keine gueltige Option!");
                     break;
-
             }
-
             System.out.println();
             System.out.println();
-
         }
-
     }
 
-
-    /*
-     * sub-menu and transaction for retrieving all students from the database
-
-    private static void showStudents() {
-
-        System.out.println("Alle Studierende anzeigen");
-        System.out.println("-----------------------------------------");
-
-        System.out.println();
-        int rowCount = printOrte();
-
-        try {
-
-            if (rowCount >= 0) {
-
-                //commit the (read-only) transaction,
-                //e.g., to release locks if locking protocol is applied in DBS
-                theConnection.commit();
-
-                DBISUtils.printlnDebugInfo("(Read-only) Transaction committed!");
-
-            }
-
-        } catch (SQLException se) {
-
-            DBISUtils.decodeAndPrintAllSQLExceptions(se);
-
-        }
-
-
-    }
-     */
 
     /*
      * sub-menu and transaction for booking or reserve a vacation apartement in the database
@@ -214,8 +163,10 @@ public class VacationApartmentApp {
         System.out.println("Ferienwohnung reservieren oder buchen");
         System.out.println("-----------------------------------------");
 
+
         System.out.println("Es gibt folgende Kunden:");
         printKunden();
+
         int kundennummer;
         while (true) {
             System.out.println("Für welchen Kunden möchten Sie eine Reservierung oder Buchung durchführen?");
@@ -232,24 +183,21 @@ public class VacationApartmentApp {
 
         System.out.println("Es gibt folgende Ferienwohnungen:");
         printFerienwohnungen();
+
         int wohnungsID;
         while (true) {
             System.out.println("Für welche Ferienwohnung möchten Sie eine Reservierung oder Buchung durchführen?");
             wohnungsID = DBISUtils.readIntFromStdIn("WohnungsID");
+
             if (validPrimaryKey("ferienwohnungen", "wohnungsid", wohnungsID)) {
                 break;
             } else {
                 System.out.println("Für den eingegebenen Wert konnte keine gültige Wohnung gefunden werden");
                 System.out.println();
             }
-
         }
 
-        //TODO: buchungsdatum mit dem aktuellen Datum befüllen
-        //String buchungsdatum = DBISUtils.readDateFromStdIn("Heute ist der (dd.MM.yyyy)");
-        //System.out.println();
 
-        //TODO: Schleifen-Problematik auflösen
         while (true) {
             String anreisetermin;
             String abreisetermin;
@@ -263,42 +211,36 @@ public class VacationApartmentApp {
                 if (modifiedAnreisetermin.compareTo(modifiedAbreisetermin) <= 0) {
                     break;
                 } else {
-                    System.out.println("Das Abreisedatum kann nicht vor dem Anreisedatum stehen");
+                    System.out.println("Das Abreisedatum kann nicht vor dem Anreisedatum liegen");
                     System.out.println();
                 }
-
             }
 
-            while (true) {
-                if (fewoIstFrei(wohnungsID, anreisetermin, abreisetermin)) {
-                    while(true) {
-                        System.out.println("Reservierung ausführen: 1\nBuchung ausführen: 2\nAbbruch Transaktion: 3");
-                        int aktionsWahl = DBISUtils.readIntFromStdIn("Was möchten Sie ausführen (1, 2, 3)");
-                        switch (aktionsWahl) {
-                            case 1:
-                                addBelegung(anreisetermin, abreisetermin, "Reservierung", kundennummer, wohnungsID);
-                                return;
+            if (fewoIstFrei(wohnungsID, anreisetermin, abreisetermin)) {
+                while (true) {
+                    System.out.println("Reservierung ausführen: 1\nBuchung ausführen: 2\nAbbruch Transaktion: 3");
+                    int aktionsWahl = DBISUtils.readIntFromStdIn("Was möchten Sie ausführen (1, 2, 3)");
+                    switch (aktionsWahl) {
+                        case 1:
+                            addBelegung(anreisetermin, abreisetermin, "Reservierung", kundennummer, wohnungsID);
+                            return;
 
-                            case 2:
-                                addBelegung(anreisetermin, abreisetermin, "Buchung", kundennummer, wohnungsID);
-                                return;
+                        case 2:
+                            addBelegung(anreisetermin, abreisetermin, "Buchung", kundennummer, wohnungsID);
+                            return;
 
-                            case 3:
-                                return;
+                        case 3:
+                            return;
 
-                            default:
-                                System.out.println(aktionsWahl + "ist kein gültige Option");
-                                System.out.println();
-
-                        }
+                        default:
+                            System.out.println(aktionsWahl + "ist kein gültige Option");
+                            System.out.println();
                     }
-                } else {
-                    System.out.println("Die Wohnung ist zum gewählten Datum bereits belegt,\nwählen Sie einen neuen Zeitraum.");
-                    break;
                 }
+            } else {
+                System.out.println("Die Wohnung ist zum gewählten Datum bereits belegt,\nwählen Sie einen neuen Zeitraum.");
             }
         }
-
     }
 
 
@@ -341,6 +283,7 @@ public class VacationApartmentApp {
         return false;
     }
 
+
     private static boolean validPrimaryKey(String tableName, String attributeName, int keyValue) {
         try {
 
@@ -354,7 +297,6 @@ public class VacationApartmentApp {
             DBISUtils.printlnDebugInfo(sqlString);
 
             ResultSet rs = stmt.executeQuery(sqlString);
-
             rs.next();
             int numberOfTupel = rs.getInt(1);
 
@@ -377,7 +319,7 @@ public class VacationApartmentApp {
 
 
     /*
-     * sub-menu and transaction for retrieving data of a particular student in the database
+     * sub-menu and transaction for retrieving data of a particular customer in the database
      */
     private static void showKunde() {
 
@@ -385,8 +327,8 @@ public class VacationApartmentApp {
         System.out.println("-----------------------------------------");
 
         String vorOderNachname = DBISUtils.readFromStdIn("Vor- oder Nachname");
-
         System.out.println();
+
         int rowCount = printKunden(vorOderNachname.toUpperCase(Locale.ROOT));
 
         try {
@@ -406,24 +348,16 @@ public class VacationApartmentApp {
             DBISUtils.decodeAndPrintAllSQLExceptions(se);
 
         }
-
     }
+
 
     private static void addBelegung(String anreisetermin, String abreisetermin, String statusflag, int belegtVon, int wohnungsid) {
 
         try {
 
-            //Note: application logic can be improved:
-            //      validate if user input is a valid "Fachbereichs-ID"
-            //      if user input is not valid, repeat user input or exit transaction on user request
-
-
             //*** example of using a JDBC statement for for INSERT / UPDATE / DELETE ***
 
             Statement stmt = theConnection.createStatement();
-
-            //DateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
-            //String buchungsdatum = dateFormat.format(LocalDate.now());
 
             String sqlString = "insert into belegungen (belegungsnummer, anreisetermin, abreisetermin, statusflag, buchungsdatum, belegtvon, wohnungsid)\n" +
                     "    values((select max(belegungsnummer) + 1 from belegungen), '" + anreisetermin + "', '" + abreisetermin + "', '" + statusflag + "', " +
@@ -439,7 +373,6 @@ public class VacationApartmentApp {
 
             //DBISUtils.printlnDebugInfo();
             DBISUtils.printlnDebugInfo("Transaction committed!");
-
             System.out.println();
 
             if (affectedRows == 1) {
@@ -459,7 +392,7 @@ public class VacationApartmentApp {
                 //abort the transaction
                 theConnection.rollback();
 
-                System.out.println("");
+                System.out.println();
                 System.out.println("Transaction rolled back!");
 
             } catch (SQLException e) {
@@ -467,9 +400,7 @@ public class VacationApartmentApp {
                 DBISUtils.decodeAndPrintAllSQLExceptions(se);
 
             }
-
         }
-
     }
 
 
@@ -484,7 +415,6 @@ public class VacationApartmentApp {
             System.out.println("-----------------------------------------");
 
             System.out.println("Daten des Kunden:");
-            // int newKundennummer = DBISUtils.readIntFromStdIn("Kundennummer");
             String newNachname = DBISUtils.readFromStdIn("Nachname");
             String newVorname = DBISUtils.readFromStdIn("Vorname");
             String newGeburtsdatum = DBISUtils.readDateFromStdIn("Geburtsdatum (dd.mm.yyyy)");
@@ -515,12 +445,6 @@ public class VacationApartmentApp {
             String newStrasse = DBISUtils.readFromStdIn("Strasse");
             String newHausnummer = DBISUtils.readFromStdIn("Hausnummer");
 
-            //Note: application logic can be improved:
-            //      validate if user input is a valid "Fachbereichs-ID"
-            //      if user input is not valid, repeat user input or exit transaction on user request
-
-
-            //*** example of using a JDBC statement for for INSERT / UPDATE / DELETE ***
 
             Statement stmtBankverbindungen = theConnection.createStatement();
 
@@ -532,6 +456,7 @@ public class VacationApartmentApp {
 
             int affectedRowsBankverbindungen = stmtBankverbindungen.executeUpdate(sqlStringBankverbindungen);
 
+
             Statement stmtAdressen = theConnection.createStatement();
 
             String sqlStringAdressen = "insert into adressen (adressid, hausnummer, strasse, plz, ortsid)\n" +
@@ -540,6 +465,7 @@ public class VacationApartmentApp {
 
             DBISUtils.printlnDebugInfo("SQL statement is:");
             DBISUtils.printlnDebugInfo(sqlStringAdressen);
+
 
             int affectedRowsAdressen = stmtAdressen.executeUpdate(sqlStringAdressen);
 
@@ -554,12 +480,12 @@ public class VacationApartmentApp {
 
             int affectedRowsKunden = stmtKunden.executeUpdate(sqlStringKunden);
 
+
             //commit the transaction
             theConnection.commit();
 
             //DBISUtils.printlnDebugInfo();
             DBISUtils.printlnDebugInfo("Transaction committed!");
-
             System.out.println();
 
             if (affectedRowsBankverbindungen == 1) {
@@ -568,11 +494,13 @@ public class VacationApartmentApp {
                 System.out.println("Die Bankverbindung " + newIBAN + " konnte nicht hinzugefuegt werden.");
             }
 
+
             if (affectedRowsAdressen == 1) {
                 System.out.println("Die Adresse " + newStrasse + " " + newHausnummer + " wurde hinzugefuegt.");
             } else {
                 System.out.println("Die Adresse " + newStrasse + " " + newHausnummer + " konnte nicht hinzugefuegt werden.");
             }
+
 
             if (affectedRowsKunden == 1) {
                 System.out.println("Der Kunde " + newVorname + " " + newNachname + " wurde hinzugefuegt.");
@@ -601,118 +529,12 @@ public class VacationApartmentApp {
                 DBISUtils.decodeAndPrintAllSQLExceptions(se);
 
             }
-
         }
-
     }
 
 
-
     /*
-     * sub-menu and transaction for modifying a student in the database
-     */
-    /*
-    private static void modifyStudent() {
-
-        try {
-
-            System.out.println("Student/in bearbeiten");
-            System.out.println("-----------------------------------------");
-
-            int MatrNr = DBISUtils.readIntFromStdIn("Matrikelnummer des zu bearbeitenden Studierenden");
-
-            System.out.println("Bisherige Daten des Studierenden:");
-
-            int rowCount = printKunde(MatrNr);
-
-            //Note: application logic can be improved:
-            //      if no student is found (rowCount = 0), repeat user input or exit transaction on user request
-
-            System.out.println();
-
-            System.out.println("Neue Daten des Studierenden:");
-            int newMatrNr = DBISUtils.readIntFromStdIn("MatrNr");
-            String newName = DBISUtils.readFromStdIn("Nachname");
-            String newVorname = DBISUtils.readFromStdIn("Vorname");
-
-            System.out.println("Es gibt folgende Fachbereiche:");
-            printFachbereiche();
-
-            String newFB_ID = DBISUtils.readFromStdIn("Geben Sie eine Fachbereichs-ID ein");
-
-            //Note: application logic can be improved:
-            //      validate if user input is a valid "Fachbereichs-ID"
-            //      if user input is not valid, repeat user input or exit transaction on user request
-
-
-            //*** example of using a JDBC prepared statement for INSERT / UPDATE / DELETE ***
-            //    NOTE: using a prepared statement does not provide any advantage here,
-            //          since the prepared statement is executed only once!
-
-            String sqlPreparedString = "UPDATE Student " +
-                                       "SET MatrNr = ?, Fachbereich = ?, Name = ?, Vorname = ? " +
-                                       "WHERE MatrNr = ?";
-
-            DBISUtils.printlnDebugInfo("SQL prepared statement is:");
-            DBISUtils.printlnDebugInfo(sqlPreparedString);
-
-            PreparedStatement pstmt = theConnection.prepareStatement(sqlPreparedString);
-
-            pstmt.setInt(1, newMatrNr);
-            DBISUtils.printlnDebugInfo("1. parameter set to: " + newMatrNr);
-            pstmt.setString(2, newFB_ID);
-            DBISUtils.printlnDebugInfo("2. parameter set to: " + newFB_ID);
-            pstmt.setString(3, newName);
-            DBISUtils.printlnDebugInfo("3. parameter set to: " + newName);
-            pstmt.setString(4, newVorname);
-            DBISUtils.printlnDebugInfo("4. parameter set to: " + newVorname);
-            pstmt.setInt(5, MatrNr);
-            DBISUtils.printlnDebugInfo("5. parameter set to: " + MatrNr);
-
-            int affectedRows = pstmt.executeUpdate();
-
-            //commit the transaction
-            theConnection.commit();
-
-            DBISUtils.printlnDebugInfo("Transaction committed!");
-
-            System.out.println();
-
-            if (affectedRows == 1) {
-                System.out.println("Der Studierende mit MatrNr " + MatrNr + " wurde aktualisiert.");
-            }
-            else {
-                System.out.println("Der Studierende mit MatrNr " + MatrNr + " existiert nicht bzw. wurde nicht ver�ndert.");
-            }
-
-            pstmt.close();
-
-        } catch (SQLException se) {
-
-            DBISUtils.decodeAndPrintAllSQLExceptions(se);
-
-            try {
-
-                //abort the transaction
-                theConnection.rollback();
-
-                System.out.println("");
-                System.out.println("Transaction rolled back!");
-
-            } catch (SQLException e) {
-
-                DBISUtils.decodeAndPrintAllSQLExceptions(se);
-
-            }
-
-        }
-
-    }
-     */
-
-
-    /*
-     * sub-menu and transaction for removing students from the database
+     * sub-menu and transaction for removing Belegungen from the database
      */
     private static void deleteBelegung() {
 
@@ -721,24 +543,13 @@ public class VacationApartmentApp {
             System.out.println("Reservierung oder Buchung löschen");
             System.out.println("-----------------------------------------");
 
-
-            //*** example of using a JDBC prepared statement for INSERT / UPDATE / DELETE ***
-            //    NOTE: using a prepared statement makes sense here,
-            //          since the prepared statement is potentially executed more than once!
-
-            String sqlPreparedString = "delete from belegungen where belegungsnummer = ?";
-
-            DBISUtils.printlnDebugInfo("SQL prepared statement is:");
-            DBISUtils.printlnDebugInfo(sqlPreparedString);
-
-            PreparedStatement pstmt = theConnection.prepareStatement(sqlPreparedString);
-
             System.out.println("Es gibt folgende Belegungen:");
             printBelegungen();
 
             int belegungsnummer;
             while (true) {
                 belegungsnummer = DBISUtils.readIntFromStdIn("Nummer der zu l�schenden Belegung");
+
                 if (validPrimaryKey("belegungen", "belegungsnummer", belegungsnummer)) {
                     break;
                 } else {
@@ -746,6 +557,13 @@ public class VacationApartmentApp {
                     System.out.println();
                 }
             }
+
+            String sqlPreparedString = "delete from belegungen where belegungsnummer = ?";
+
+            DBISUtils.printlnDebugInfo("SQL prepared statement is:");
+            DBISUtils.printlnDebugInfo(sqlPreparedString);
+
+            PreparedStatement pstmt = theConnection.prepareStatement(sqlPreparedString);
 
             pstmt.setInt(1, belegungsnummer);
             DBISUtils.printlnDebugInfo("1. parameter set to: " + belegungsnummer);
@@ -756,7 +574,6 @@ public class VacationApartmentApp {
             theConnection.commit();
 
             DBISUtils.printlnDebugInfo("Transaction committed!");
-
             System.out.println();
 
             if (affectedRows == 1) {
@@ -784,22 +601,18 @@ public class VacationApartmentApp {
                 DBISUtils.decodeAndPrintAllSQLExceptions(se);
 
             }
-
         }
-
     }
 
 
     /*
-     * retrieve and print a list of *all* students in the database
+     * retrieve and print a list of *all* Orte in the database
      */
     private static int printOrte() {
-
 
         try {
 
             Statement stmt = theConnection.createStatement();
-
 
             //*** example of using a JDBC statement for SELECT ***
 
@@ -850,7 +663,6 @@ public class VacationApartmentApp {
             DBISUtils.printlnDebugInfo(sqlPreparedString);
 
             PreparedStatement pstmt = theConnection.prepareStatement(sqlPreparedString);
-            // DBISUtils.printlnDebugInfo("Prepared Statement wurde erstellt.");
 
             pstmt.setString(1, "%" + vorOderNachnameCaseInsensitiv + "%");
             DBISUtils.printlnDebugInfo("1. Parameter set to: " + vorOderNachnameCaseInsensitiv);
@@ -858,7 +670,6 @@ public class VacationApartmentApp {
             DBISUtils.printlnDebugInfo("2. Parameter set to: " + vorOderNachnameCaseInsensitiv);
 
             ResultSet rs = pstmt.executeQuery();
-            // System.out.println("wird ausgeführt");
 
             int rowCount = DBISUtils.printResultSet(rs);
 
@@ -874,15 +685,14 @@ public class VacationApartmentApp {
             return -1;
 
         }
-
     }
+
 
     private static int printFerienwohnungen() {
 
         try {
 
             Statement stmt = theConnection.createStatement();
-
 
             //*** example of using a JDBC statement for SELECT ***
 
@@ -912,15 +722,14 @@ public class VacationApartmentApp {
             return -1;
 
         }
-
     }
+
 
     private static int printKunden() {
 
         try {
 
             Statement stmt = theConnection.createStatement();
-
 
             //*** example of using a JDBC statement for SELECT ***
 
@@ -945,7 +754,6 @@ public class VacationApartmentApp {
             return -1;
 
         }
-
     }
 
 
@@ -981,8 +789,5 @@ public class VacationApartmentApp {
             return -1;
 
         }
-
     }
-
-
 }
