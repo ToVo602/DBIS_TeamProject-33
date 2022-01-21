@@ -199,24 +199,21 @@ public class VacationApartmentApp {
 
 
         while (true) {
-            String anreisetermin;
-            String abreisetermin;
-            while (true) {
-                anreisetermin = DBISUtils.readDateFromStdIn("Wann möchten Sie anreisen?");
-                String modifiedAnreisetermin = DBISUtils.convertEuropeanToEnglishDate(anreisetermin);
-                abreisetermin = DBISUtils.readDateFromStdIn("Wann möchten Sie wieder abreisen?");
-                String modifiedAbreisetermin = DBISUtils.convertEuropeanToEnglishDate(abreisetermin);
-                System.out.println();
 
-                if (modifiedAnreisetermin.compareTo(modifiedAbreisetermin) <= 0) {
-                    break;
-                } else {
-                    System.out.println("Das Abreisedatum kann nicht vor dem Anreisedatum liegen");
-                    System.out.println();
-                }
+            System.out.println();
+            String anreisetermin = DBISUtils.readDateFromStdIn("Wann möchten Sie anreisen?");
+            String modifiedAnreisetermin = DBISUtils.convertEuropeanToEnglishDate(anreisetermin);
+            String abreisetermin = DBISUtils.readDateFromStdIn("Wann möchten Sie wieder abreisen?");
+            String modifiedAbreisetermin = DBISUtils.convertEuropeanToEnglishDate(abreisetermin);
+            System.out.println();
+
+            if (modifiedAnreisetermin.compareTo(modifiedAbreisetermin) > 0) {
+                System.out.println("Das Abreisedatum kann nicht vor dem Anreisedatum liegen");
+                continue;
             }
 
             if (fewoIstFrei(wohnungsID, anreisetermin, abreisetermin)) {
+                System.out.println("Ihre gewünschte Wohnung ist in diesem Zeitraum frei!\nWas möchten Sie nun tun?");
                 while (true) {
                     System.out.println("Reservierung ausführen: 1\nBuchung ausführen: 2\nAbbruch Transaktion: 3");
                     int aktionsWahl = DBISUtils.readIntFromStdIn("Was möchten Sie ausführen (1, 2, 3)");
@@ -230,11 +227,13 @@ public class VacationApartmentApp {
                             return;
 
                         case 3:
+                            System.out.println();
+                            System.out.println("Die Transaktion wird abgebrochen.");
                             return;
 
                         default:
-                            System.out.println(aktionsWahl + "ist kein gültige Option");
                             System.out.println();
+                            System.out.println(aktionsWahl + " ist kein gültige Option\nGeben Sie eine der folgenden Option ein:");
                     }
                 }
             } else {
