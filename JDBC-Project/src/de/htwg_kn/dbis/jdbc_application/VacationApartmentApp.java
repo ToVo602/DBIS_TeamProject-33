@@ -207,7 +207,7 @@ public class VacationApartmentApp {
             String modifiedAbreisetermin = DBISUtils.convertEuropeanToEnglishDate(abreisetermin);
             System.out.println();
 
-            if (modifiedAnreisetermin.compareTo(modifiedAbreisetermin) > 0) {
+            if (modifiedAnreisetermin.compareTo(modifiedAbreisetermin) >= 0) {
                 System.out.println("Das Abreisedatum kann nicht vor dem Anreisedatum liegen");
                 continue;
             }

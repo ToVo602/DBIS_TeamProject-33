@@ -25,6 +25,17 @@ select startflughafen, Zielflughafen
     from anfliegen
     connect by Zielflughafen = prior startflughafen
     start with startflughafen = 'FRA';
+
+with TransitivH (Startflughafen, Zielflughafen) as
+    ((select anf.startflughafen, anf.zielflughafen
+        from anfliegen anf)
+    union all
+    (select tH.startflughafen, anf.zielflughafen
+        from TransitivH tH, anfliegen anf
+        where tH.zielflughafen = anf.startflughafen))
+select distinct *
+    from TransitivH
+    where Startflughafen = 'FRA';
     
 
 -- create user dbs999 identified by dbs999; --> nicht genug Zugriffsrechte
