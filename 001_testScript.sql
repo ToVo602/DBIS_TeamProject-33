@@ -36,6 +36,47 @@ with TransitivH (Startflughafen, Zielflughafen) as
 select distinct *
     from TransitivH
     where Startflughafen = 'FRA';
-    
 
--- create user dbs999 identified by dbs999; --> nicht genug Zugriffsrechte
+--create user dbs999 identified by dbs999; --> nicht genug Zugriffsrechte
+
+--Select-Statement für Assertion:
+--Eine Adresse soll genau einem Kunden, einer FeWo, einer Touristenattraktion oder einem Flughafen gehören.
+(select ad.adressid
+    from adressen ad
+    where ad.adressid not in
+        ((select adressid
+            from ferienwohnungen)
+        union all
+        (select adressid
+            from flughaefen)
+        union all
+        (select adressid
+            from kunden)
+        union all
+        (select adressid
+            from touristenattraktionen)))
+union all
+(select ad.adressid
+    from 
+        ((select adressid
+            from ferienwohnungen)
+        union all
+        (select adressid
+            from flughaefen)
+        union all
+        (select adressid
+            from kunden)
+        union all
+        (select adressid
+            from touristenattraktionen)) TableUnion, adressen ad
+    where TableUnion.adressid = ad.adressid
+    group by ad.adressid
+    having count(*) > 1);
+
+-- Test-Daten, um Select für Assertion zu testen
+insert into ferienwohnungen
+    values((select max(wohnungsid) + 1 from ferienwohnungen), 'Beschreibung', 5, 100, 120, 1);
+
+insert into adressen
+    values((select max(adressid) + 1 from adressen), '654', 'Test', 'Test', (select max(ortsid) from orte));
+
